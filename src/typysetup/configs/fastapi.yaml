@@ -1,0 +1,67 @@
+name: FastAPI
+slug: fastapi
+description: Web API with FastAPI framework - async, modern, fast
+python_version: "3.10+"
+supported_managers:
+  - uv
+  - poetry
+  - pip
+
+vscode_settings:
+  python.linting.enabled: true
+  python.linting.pylintEnabled: true
+  python.formatting.provider: "black"
+  python.linting.pylintPath: ".venv/bin/pylint"
+  editor.formatOnSave: true
+  editor.defaultFormatter: "ms-python.python"
+  "[python]":
+    editor.defaultFormatter: "ms-python.python"
+    editor.formatOnSave: true
+
+vscode_extensions:
+  - ms-python.python
+  - ms-python.vscode-pylance
+  - charliermarsh.ruff
+  - ms-python.black-formatter
+
+vscode_launch_config:
+  version: "0.2.0"
+  configurations:
+    - name: "Python: FastAPI"
+      type: python
+      request: launch
+      module: uvicorn
+      args:
+        - "main:app"
+        - "--reload"
+      jinja: true
+      justMyCode: true
+
+dependencies:
+  core:
+    - "fastapi>=0.104.0"
+    - "uvicorn[standard]>=0.24.0"
+    - "pydantic>=2.0"
+    - "pydantic-settings>=2.0"
+  dev:
+    - "pytest>=7.0"
+    - "pytest-cov>=4.0"
+    - "pytest-asyncio>=0.21.0"
+    - "black>=23.0"
+    - "ruff>=0.1.0"
+    - "mypy>=1.0"
+  optional:
+    - "sqlalchemy>=2.0"
+    - "alembic>=1.13.0"
+    - "httpx>=0.24.0"
+    - "redis>=5.0"
+    - "pydantic-extra-types>=2.0"
+
+tags:
+  - web
+  - api
+  - async
+  - rest
+  - backend
+
+docs_url: "https://fastapi.tiangolo.com"

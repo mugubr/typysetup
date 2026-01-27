@@ -1,0 +1,52 @@
+name: Async/Real-time
+slug: async-realtime
+description: High-performance async and real-time applications
+python_version: "3.10+"
+supported_managers:
+  - uv
+  - poetry
+  - pip
+
+vscode_settings:
+  python.linting.enabled: true
+  python.formatting.provider: "black"
+  editor.formatOnSave: true
+  editor.defaultFormatter: "ms-python.python"
+  "[python]":
+    editor.defaultFormatter: "ms-python.python"
+    editor.formatOnSave: true
+
+vscode_extensions:
+  - ms-python.python
+  - ms-python.vscode-pylance
+  - charliermarsh.ruff
+  - ms-python.black-formatter
+
+dependencies:
+  core:
+    - "asyncio>=3.4.3"
+    - "aiohttp>=3.8"
+    - "websockets>=11.0"
+    - "starlette>=0.27"
+    - "uvicorn[standard]>=0.24.0"
+  dev:
+    - "pytest>=7.0"
+    - "pytest-asyncio>=0.21.0"
+    - "pytest-cov>=4.0"
+    - "black>=23.0"
+    - "ruff>=0.1.0"
+    - "mypy>=1.0"
+  optional:
+    - "aiofiles>=23.0"
+    - "redis>=5.0"
+    - "sqlalchemy>=2.0"
+    - "fastapi>=0.104.0"
+
+tags:
+  - async
+  - realtime
+  - websockets
+  - performance
+  - concurrent
+
+docs_url: "https://docs.python.org/3/library/asyncio.html"

@@ -1,0 +1,63 @@
+name: Django
+slug: django
+description: Full-stack web framework with batteries included
+python_version: "3.8+"
+supported_managers:
+  - uv
+  - poetry
+  - pip
+
+vscode_settings:
+  python.linting.enabled: true
+  python.formatting.provider: "black"
+  editor.formatOnSave: true
+  editor.defaultFormatter: "ms-python.python"
+  "[python]":
+    editor.defaultFormatter: "ms-python.python"
+    editor.formatOnSave: true
+
+vscode_extensions:
+  - ms-python.python
+  - ms-python.vscode-pylance
+  - charliermarsh.ruff
+  - ms-python.black-formatter
+  - batisteo.vscode-django
+
+vscode_launch_config:
+  version: "0.2.0"
+  configurations:
+    - name: "Python: Django"
+      type: python
+      request: launch
+      program: "${workspaceFolder}/manage.py"
+      args:
+        - "runserver"
+      django: true
+      jinja: true
+      justMyCode: true
+
+dependencies:
+  core:
+    - "Django>=4.2"
+    - "djangorestframework>=3.14.0"
+    - "python-dotenv>=1.0"
+  dev:
+    - "pytest>=7.0"
+    - "pytest-django>=4.5"
+    - "pytest-cov>=4.0"
+    - "black>=23.0"
+    - "ruff>=0.1.0"
+    - "mypy>=1.0"
+  optional:
+    - "psycopg2-binary>=2.9"
+    - "gunicorn>=21.0"
+    - "celery>=5.3"
+    - "django-extensions>=3.2"
+
+tags:
+  - web
+  - framework
+  - orm
+  - backend
+
+docs_url: "https://docs.djangoproject.com"
