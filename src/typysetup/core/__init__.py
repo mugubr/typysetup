@@ -3,6 +3,7 @@
 from .config_loader import ConfigLoader, ConfigLoadError
 from .dependency_installer import DependencyInstaller
 from .file_backup_manager import FileBackupManager
+from .gitignore_generator import GitignoreGenerator
 from .preference_manager import PreferenceLoadError, PreferenceManager, PreferenceSaveError
 from .project_config_manager import (
     ProjectConfigLoadError,
@@ -27,6 +28,7 @@ __all__ = [
     "SetupTypeFilter",
     "SetupTypeValidator",
     "FileBackupManager",
+    "GitignoreGenerator",
     "VSCodeConfigGenerator",
     "VirtualEnvironmentManager",
     "DependencyInstaller",

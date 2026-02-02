@@ -162,6 +162,9 @@ class VSCodeConfigGenerator:
                     if backup_path:
                         self.backups[str(filepath)] = backup_path
                         console.print(f"[dim]Backed up {filename}[/dim]")
+
+                        # Cleanup old backups, keep only 3 most recent
+                        self.backup_manager.cleanup_old_backups(filepath, keep_count=3)
                 except OSError as e:
                     console.print(f"[yellow]Warning: Could not backup {filename}: {e}[/yellow]")
 

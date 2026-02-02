@@ -133,4 +133,7 @@ Thumbs.db
 # Project-specific
 .typysetup/
 
+# Backup files created by FileBackupManager
+*.backup.*
+
 PYPI_GUIDE.md

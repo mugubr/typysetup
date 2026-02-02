@@ -61,6 +61,9 @@ class PyprojectGenerator:
                 backup_path = self.file_backup_manager.create_backup(pyproject_path)
                 logger.debug(f"Backup created at {backup_path}")
 
+                # Cleanup old backups, keep only 3 most recent
+                self.file_backup_manager.cleanup_old_backups(pyproject_path, keep_count=3)
+
             try:
                 # Write the new file
                 logger.debug(f"Writing pyproject.toml to {pyproject_path}")

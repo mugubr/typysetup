@@ -14,6 +14,7 @@ from rich.table import Table
 from typysetup.core import (
     ConfigLoader,
     DependencyInstaller,
+    GitignoreGenerator,
     PreferenceManager,
     ProjectConfigManager,
     PyprojectGenerator,
@@ -107,6 +108,11 @@ class SetupOrchestrator:
             # Validate and normalize project path
             self.project_path = ensure_project_directory(project_path)
             console.print(f"[green]✓[/green] Project directory: {self.project_path}\n")
+
+            # Generate .gitignore (Phase 1)
+            if not self._generate_gitignore():
+                console.print("[yellow]Setup cancelled during .gitignore generation.[/yellow]")
+                return None
 
             # Step 1: Select setup type
             if not self._select_setup_type():
@@ -628,6 +634,29 @@ class SetupOrchestrator:
         ).ask()
 
         return confirm if confirm is not None else True
+
+    def _generate_gitignore(self) -> bool:
+        """Generate .gitignore file (Phase 1).
+
+        Returns:
+            True if successful, False if failed
+        """
+        if not self.project_path:
+            console.print("[red]Error: Project path not set.[/red]")
+            return False
+
+        try:
+            console.print("\n[bold blue]Generating .gitignore...[/bold blue]")
+            gitignore_path = GitignoreGenerator.generate_gitignore(self.project_path)
+            console.print(f"[green]✓[/green] .gitignore created at {gitignore_path}")
+            return True
+        except Exception as e:
+            console.print(f"[red]Error generating .gitignore: {e}[/red]")
+            if "--verbose" in sys.argv:
+                import traceback
+
+                traceback.print_exc()
+            return False
 
     def _generate_vscode_config(self) -> bool:
         """Generate VSCode configuration files (Phase 5).
