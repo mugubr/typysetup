@@ -30,7 +30,7 @@ class DependencyInstaller:
     def __init__(self):
         """Initialize the dependency installer."""
         self.timeout_pip = 600  # 10 minutes for pip
-        self.timeout_uv = 300  # 5 minutes for uv
+        self.timeout_uv = 600  # 10 minutes for uv
         self.timeout_poetry = 900  # 15 minutes for poetry (lock file generation)
 
     def install_dependencies(

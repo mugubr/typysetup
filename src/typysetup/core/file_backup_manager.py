@@ -1,7 +1,7 @@
 """File backup and restore manager for safe config updates."""
 
 import shutil
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import List, Optional
 
@@ -35,7 +35,7 @@ class FileBackupManager:
             return None
 
         # Create backup filename with ISO timestamp including microseconds
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         timestamp = now.strftime("%Y%m%dT%H%M%S") + f".{now.microsecond:06d}Z"
         backup_path = (
             filepath.parent / f"{filepath.name}{FileBackupManager.BACKUP_SUFFIX}.{timestamp}"

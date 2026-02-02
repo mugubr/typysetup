@@ -1,7 +1,7 @@
 """Tests for CLI commands: config display and history management."""
 
 import json
-from datetime import datetime
+from datetime import UTC, datetime
 
 import pytest
 from typer.testing import CliRunner
@@ -29,7 +29,7 @@ class TestConfigCommand:
             "package_manager": "uv",
             "venv_path": str(tmp_path / "venv"),
             "status": "success",
-            "created_at": datetime.utcnow().isoformat() + "Z",
+            "created_at": datetime.now(UTC).isoformat() + "Z",
             "installed_dependencies": [],
         }
 
@@ -72,7 +72,7 @@ class TestConfigCommand:
             "package_manager": "pip",
             "venv_path": str(tmp_path / "venv"),
             "status": "success",
-            "created_at": datetime.utcnow().isoformat() + "Z",
+            "created_at": datetime.now(UTC).isoformat() + "Z",
             "installed_dependencies": [],
             "project_metadata": {
                 "project_name": "my-flask-app",
@@ -105,7 +105,7 @@ class TestConfigCommand:
             "package_manager": "uv",
             "venv_path": str(tmp_path / "venv"),
             "status": "success",
-            "created_at": datetime.utcnow().isoformat() + "Z",
+            "created_at": datetime.now(UTC).isoformat() + "Z",
             "installed_dependencies": [
                 {
                     "name": "fastapi",
@@ -335,7 +335,7 @@ class TestConfigCommandEdgeCases:
             "package_manager": "pip",
             "venv_path": str(tmp_path / "venv"),
             "status": "success",
-            "created_at": datetime.utcnow().isoformat() + "Z",
+            "created_at": datetime.now(UTC).isoformat() + "Z",
             "installed_dependencies": [],
         }
 
