@@ -53,7 +53,7 @@ class TestDependencyInstallerInit:
         """Test that __init__ sets appropriate timeouts."""
         installer = DependencyInstaller()
         assert installer.timeout_pip == 600
-        assert installer.timeout_uv == 300
+        assert installer.timeout_uv == 600
         assert installer.timeout_poetry == 900
 
 
@@ -228,7 +228,7 @@ class TestInstallWithUv:
         assert "pip" in args[0]
         assert "install" in args[0]
         assert "--python" in args[0]
-        assert kwargs["timeout"] == 300
+        assert kwargs["timeout"] == 600
 
     @patch("shutil.which")
     def test_install_uv_not_found(self, mock_which, installer):
