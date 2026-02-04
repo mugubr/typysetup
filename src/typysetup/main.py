@@ -7,6 +7,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
+from typysetup import __version__
 from typysetup.commands.setup_orchestrator import SetupOrchestrator
 from typysetup.core import ConfigLoader
 
@@ -478,7 +479,7 @@ def main(
 ) -> None:
     """TyPySetup - Interactive Python environment setup for VSCode."""
     if version:
-        console.print("typysetup version 0.1.0")
+        console.print(f"typysetup version {__version__}")
         raise typer.Exit()
 
 
