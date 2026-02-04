@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from typer.testing import CliRunner
 
+from typysetup import __version__
 from typysetup.main import app
 from typysetup.models import SetupType
 
@@ -124,7 +125,7 @@ def test_version_flag(cli_runner):
     result = cli_runner.invoke(app, ["--version"])
 
     assert result.exit_code == 0
-    assert "typysetup version 0.1.0" in result.stdout
+    assert f"typysetup version {__version__}" in result.stdout
 
 
 def test_help_flag(cli_runner):
