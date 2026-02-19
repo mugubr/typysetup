@@ -74,7 +74,7 @@ TyPySetup is a CLI tool built with Typer that automates Python environment setup
 ---
 
 ## System Architecture
-
+ 
 ### High-Level Architecture
 
 ```
