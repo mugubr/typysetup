@@ -16,6 +16,12 @@ Interactive Python environment setup CLI for VSCode. Automatically configure Pyt
 ### Installation
 
 ```bash
+# Install from PyPI (recommended)
+pip install typysetup
+
+# Or with uv
+uv tool install typysetup
+
 # Install from source (development)
 git clone <repository>
 cd typysetup
@@ -60,9 +66,15 @@ typysetup/
 ├── src/typysetup/
 │   ├── main.py                # Typer CLI application
 │   ├── models/                # Pydantic data models
-│   ├── commands/              # CLI commands (setup, list, preferences)
+│   ├── commands/              # CLI command classes (OOP)
+│   │   ├── config_cmd.py      # ConfigCommand
+│   │   ├── help_cmd.py        # HelpCommand
+│   │   ├── history_cmd.py     # HistoryCommand
+│   │   ├── list_cmd.py        # ListCommand
+│   │   ├── preferences_cmd.py # PreferencesCommand
+│   │   └── setup_orchestrator.py # SetupOrchestrator (main wizard)
 │   ├── core/                  # Business logic (config loading, venv, deps, vscode)
-│   ├── utils/                 # Utilities (UI, paths, validators)
+│   ├── utils/                 # Utilities (paths, prompts, rollback)
 │   └── configs/               # Setup type YAML templates
 ├── tests/
 │   ├── unit/                  # Unit tests

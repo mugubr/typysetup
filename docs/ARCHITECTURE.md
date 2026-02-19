@@ -1,7 +1,7 @@
 # TyPySetup Architecture Documentation
 
-**Version**: 0.1.0
-**Date**: 2026-01-25
+**Version**: 1.1.0
+**Date**: 2026-02-18
 **Status**: Production Ready
 
 ---
@@ -86,9 +86,12 @@ TyPySetup is a CLI tool built with Typer that automates Python environment setup
              ▼
 ┌────────────────────────────────────────────────────────────────┐
 │                      Command Layer                             │
-│  ┌──────────┐  ┌─────────────┐  ┌────────────┐               │
-│  │  setup   │  │ preferences │  │   config   │  ...          │
-│  └──────────┘  └─────────────┘  └────────────┘               │
+│  ┌────────────┐  ┌─────────────┐  ┌────────────┐  ┌────────┐ │
+│  │   setup    │  │  list       │  │preferences │  │ config │ │
+│  └────────────┘  └─────────────┘  └────────────┘  └────────┘ │
+│  ┌────────────┐  ┌──────┐                                     │
+│  │   history  │  │ help │                                     │
+│  └────────────┘  └──────┘                                     │
 └────────────┬───────────────────────────────────────────────────┘
              │
              ▼
@@ -133,8 +136,13 @@ src/typysetup/
 │   ├── user_preference.py     # UserPreference entity
 │   ├── dependency_group.py    # Dependency grouping
 │   └── ...
-├── commands/                  # CLI command implementations
-│   └── setup_orchestrator.py # Main setup flow orchestration
+├── commands/                  # CLI command classes (OOP)
+│   ├── config_cmd.py          # ConfigCommand
+│   ├── help_cmd.py            # HelpCommand
+│   ├── history_cmd.py         # HistoryCommand
+│   ├── list_cmd.py            # ListCommand
+│   ├── preferences_cmd.py     # PreferencesCommand
+│   └── setup_orchestrator.py  # SetupOrchestrator (main wizard)
 ├── core/                      # Business logic (framework-agnostic)
 │   ├── config_loader.py       # Load & validate YAML configs
 │   ├── venv_manager.py        # Virtual environment creation
@@ -143,9 +151,10 @@ src/typysetup/
 │   ├── preference_manager.py  # User preference persistence
 │   └── project_config_manager.py # Project config management
 ├── utils/                     # Utilities and helpers
-│   ├── ui.py                  # Rich/Questionary UI components
 │   ├── paths.py               # Cross-platform path handling
-│   └── validators.py          # Custom validators
+│   ├── performance.py         # Performance utilities
+│   ├── prompts.py             # PromptManager (Questionary wrappers)
+│   └── rollback_context.py    # RollbackContext (context manager)
 └── configs/                   # Setup type YAML templates
     ├── fastapi.yaml
     ├── django.yaml
@@ -161,9 +170,9 @@ src/typysetup/
 |--------|----------------|--------------|
 | `main.py` | CLI app definition, command routing | Typer, commands/* |
 | `models/` | Data validation, serialization | Pydantic |
-| `commands/` | User interaction, command logic | Typer, core/*, utils/ui |
+| `commands/` | CLI command classes with OOP pattern | Typer, core/*, utils/* |
 | `core/` | Business logic, pure functions | models/*, minimal external |
-| `utils/` | Cross-cutting concerns | Rich, Questionary |
+| `utils/` | Cross-cutting concerns (paths, prompts, rollback) | Rich, Questionary |
 | `configs/` | YAML configuration files | None (data) |
 
 ---
@@ -349,6 +358,35 @@ class SetupOrchestrator:
 
         return project_config
 ```
+
+### 6. Command Pattern (CLI Commands)
+
+**Purpose**: Encapsulate each CLI command in a class with single responsibility.
+
+```python
+class ListCommand:
+    def __init__(self, config_loader: ConfigLoader):
+        self.config_loader = config_loader
+
+    def execute(self) -> None:
+        setup_types = self.config_loader.load_all_setup_types()
+        # Render rich table with setup types
+        self._display_table(setup_types)
+
+class ConfigCommand:
+    def __init__(self, project_config_manager: ProjectConfigManager):
+        self.project_config_manager = project_config_manager
+
+    def execute(self, project_path: str) -> None:
+        config = self.project_config_manager.load_config(project_path)
+        # Display project configuration
+```
+
+**Benefits**:
+- Facilitates unit testing of each command in isolation
+- Reduces cyclomatic complexity of `main.py`
+- Enables code reuse between commands
+- Clear separation of concerns
 
 ---
 

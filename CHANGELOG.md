@@ -5,6 +5,17 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [1.1.0] - 2026-02-18
+
+### Changed
+- Refatoração dos comandos CLI para classes OOP, melhorando coesão e testabilidade (`ConfigCommand`, `HelpCommand`, `HistoryCommand`, `ListCommand`, `PreferencesCommand`, `SetupOrchestrator`)
+
+### Fixed
+- Sincronização da versão exibida por `typysetup --version` com `__version__` do pacote
+
+### Added
+- Documentação hierárquica `AGENTS.md` em três níveis (raiz, `core/`, `models/`) para desenvolvimento assistido por IA
+
 ## [1.0.0] - 2026-02-02
 
 ### Added
