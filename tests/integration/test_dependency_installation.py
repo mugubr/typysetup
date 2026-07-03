@@ -52,7 +52,7 @@ def project_config(tmp_path, temp_venv):
         project_path=str(tmp_path),
         setup_type_slug="test",
         python_version="3.10+",
-        python_executable=get_venv_python_executable(temp_venv),
+        python_executable=str(get_venv_python_executable(temp_venv)),
         package_manager="pip",
         venv_path=str(temp_venv),
     )
@@ -123,11 +123,14 @@ class TestDependencyInstallationIntegration:
 
         assert result.exists()
 
-        # Verify content
-        import tomli
+        # Verify content (tomllib is stdlib on 3.11+, tomli on 3.10)
+        try:
+            import tomllib
+        except ModuleNotFoundError:
+            import tomli as tomllib
 
         with open(result, "rb") as f:
-            config = tomli.load(f)
+            config = tomllib.load(f)
 
         assert config["project"]["name"] == "test_integration"
         assert len(config["project"]["dependencies"]) == 2

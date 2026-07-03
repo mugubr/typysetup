@@ -1,7 +1,6 @@
 """Main Typer application entry point."""
 
 import logging
-from typing import Optional
 
 import typer
 from rich.console import Console
@@ -97,7 +96,7 @@ def history(
 
 @app.command("help")
 def help_topic(
-    topic: Optional[str] = typer.Argument(None, help="Specific topic to get help for"),
+    topic: str | None = typer.Argument(None, help="Specific topic to get help for"),
 ) -> None:
     """
     Show detailed help and usage examples.
@@ -111,12 +110,11 @@ def help_topic(
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
-    version: Optional[bool] = typer.Option(
+    version: bool | None = typer.Option(
         None,
         "--version",
         "-v",
         help="Show version",
-        is_flag=True,
         is_eager=True,
     ),
 ) -> None:

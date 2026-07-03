@@ -1,7 +1,6 @@
 """Questionary-based prompt manager for interactive setup wizard."""
 
 import logging
-from typing import List, Optional
 
 import questionary
 from rich.console import Console
@@ -25,7 +24,7 @@ class PromptManager:
         """Initialize prompt manager."""
         self.max_retries = 3
 
-    def prompt_dependency_groups(self, setup_type: SetupType) -> Optional[DependencySelection]:
+    def prompt_dependency_groups(self, setup_type: SetupType) -> DependencySelection | None:
         """Prompt user to select which dependency groups to install.
 
         Args:
@@ -100,7 +99,7 @@ class PromptManager:
             console.print(f"[red]Error creating dependency selection: {e}[/red]")
             return None
 
-    def prompt_vscode_extensions(self, setup_type: SetupType) -> Optional[List[str]]:
+    def prompt_vscode_extensions(self, setup_type: SetupType) -> list[str] | None:
         """Prompt user to select which VSCode extensions to install.
 
         Args:
@@ -143,7 +142,7 @@ class PromptManager:
 
         return selected
 
-    def prompt_project_name(self) -> Optional[str]:
+    def prompt_project_name(self) -> str | None:
         """Prompt user for project name with validation.
 
         Returns:
@@ -175,7 +174,7 @@ class PromptManager:
 
         return None
 
-    def prompt_project_description(self) -> Optional[str]:
+    def prompt_project_description(self) -> str | None:
         """Prompt user for optional project description.
 
         Returns:
@@ -193,7 +192,7 @@ class PromptManager:
         # Return None if empty string (user skipped)
         return description if description.strip() else None
 
-    def prompt_author_name(self) -> Optional[str]:
+    def prompt_author_name(self) -> str | None:
         """Prompt user for optional author name.
 
         Returns:
@@ -210,7 +209,7 @@ class PromptManager:
         # Return None if empty string (user skipped)
         return author if author.strip() else None
 
-    def prompt_author_email(self) -> Optional[str]:
+    def prompt_author_email(self) -> str | None:
         """Prompt user for optional author email with validation.
 
         Returns:
@@ -247,7 +246,7 @@ class PromptManager:
 
         return None
 
-    def prompt_collect_all_metadata(self) -> Optional[ProjectMetadata]:
+    def prompt_collect_all_metadata(self) -> ProjectMetadata | None:
         """Collect all project metadata in sequence.
 
         Returns:

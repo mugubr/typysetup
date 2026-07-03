@@ -1,6 +1,6 @@
 """Utilities for filtering, comparing, and analyzing setup types."""
 
-from typing import Any, Dict, List
+from typing import Any
 
 from typysetup.models import SetupType
 
@@ -9,7 +9,7 @@ class SetupTypeComparator:
     """Compare setup types to find similarities and differences."""
 
     @staticmethod
-    def compare_dependencies(setup_type1: SetupType, setup_type2: SetupType) -> Dict[str, Any]:
+    def compare_dependencies(setup_type1: SetupType, setup_type2: SetupType) -> dict[str, Any]:
         """Compare dependencies between two setup types.
 
         Args:
@@ -40,7 +40,7 @@ class SetupTypeComparator:
         }
 
     @staticmethod
-    def compare_managers(setup_type1: SetupType, setup_type2: SetupType) -> Dict[str, Any]:
+    def compare_managers(setup_type1: SetupType, setup_type2: SetupType) -> dict[str, Any]:
         """Compare package managers supported by two setup types.
 
         Args:
@@ -91,10 +91,10 @@ class SetupTypeFilter:
 
     @staticmethod
     def filter_by_tags(
-        setup_types: List[SetupType],
-        tags: List[str],
+        setup_types: list[SetupType],
+        tags: list[str],
         match_all: bool = False,
-    ) -> List[SetupType]:
+    ) -> list[SetupType]:
         """Filter setup types by tags.
 
         Args:
@@ -113,9 +113,9 @@ class SetupTypeFilter:
 
     @staticmethod
     def filter_by_manager(
-        setup_types: List[SetupType],
+        setup_types: list[SetupType],
         manager: str,
-    ) -> List[SetupType]:
+    ) -> list[SetupType]:
         """Filter setup types by supported package manager.
 
         Args:
@@ -129,9 +129,9 @@ class SetupTypeFilter:
 
     @staticmethod
     def filter_by_python_version(
-        setup_types: List[SetupType],
+        setup_types: list[SetupType],
         version: str,
-    ) -> List[SetupType]:
+    ) -> list[SetupType]:
         """Filter setup types by Python version compatibility.
 
         Args:
@@ -145,9 +145,9 @@ class SetupTypeFilter:
 
     @staticmethod
     def filter_by_min_dependencies(
-        setup_types: List[SetupType],
+        setup_types: list[SetupType],
         min_count: int,
-    ) -> List[SetupType]:
+    ) -> list[SetupType]:
         """Filter setup types by minimum dependency count.
 
         Args:
@@ -161,8 +161,8 @@ class SetupTypeFilter:
 
     @staticmethod
     def filter_by_vscode_support(
-        setup_types: List[SetupType],
-    ) -> List[SetupType]:
+        setup_types: list[SetupType],
+    ) -> list[SetupType]:
         """Filter setup types that have VSCode configuration.
 
         Args:
@@ -175,9 +175,9 @@ class SetupTypeFilter:
 
     @staticmethod
     def rank_by_relevance(
-        setup_types: List[SetupType],
+        setup_types: list[SetupType],
         query: str,
-    ) -> List[SetupType]:
+    ) -> list[SetupType]:
         """Rank setup types by relevance to a search query.
 
         Exact matches score higher than partial matches.
@@ -228,9 +228,9 @@ class SetupTypeFilter:
 
     @staticmethod
     def apply_multiple_filters(
-        setup_types: List[SetupType],
-        filters: Dict[str, any],
-    ) -> List[SetupType]:
+        setup_types: list[SetupType],
+        filters: dict[str, Any],
+    ) -> list[SetupType]:
         """Apply multiple filters to setup types.
 
         Supported filter keys:
@@ -271,7 +271,7 @@ class SetupTypeValidator:
     """Validate setup types for correctness and compatibility."""
 
     @staticmethod
-    def validate_setup_type(setup_type: SetupType) -> Dict[str, any]:
+    def validate_setup_type(setup_type: SetupType) -> dict[str, Any]:
         """Validate a setup type for correctness.
 
         Args:

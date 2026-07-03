@@ -89,7 +89,7 @@ Veja [Processo de Desenvolvimento](#processo-de-desenvolvimento) abaixo.
 
 ### Pré-requisitos
 
-- Python 3.8 ou superior
+- Python 3.10 ou superior
 - Git
 - (Opcional) uv para instalação rápida
 
@@ -262,7 +262,7 @@ mypy src/typysetup
 ```toml
 [tool.black]
 line-length = 100
-target-version = ['py38']
+target-version = ['py310', 'py311', 'py312', 'py313']
 
 [tool.isort]
 profile = "black"
@@ -273,7 +273,7 @@ line-length = 100
 select = ["E", "F", "W", "I"]
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.10"
 strict = true
 ```
 

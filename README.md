@@ -7,7 +7,7 @@ Interactive Python environment setup CLI for VSCode. Automatically configure Pyt
 - 🎯 **Interactive Menu** - Select from 6 project type templates (FastAPI, Django, Data Science, CLI Tools, Async/Real-time, ML/AI)
 - 🔧 **Automatic Setup** - Create virtual environment, install dependencies, generate VSCode configs
 - 📦 **Multiple Package Managers** - Support for uv (fast), pip (universal), and poetry (lock files)
-- ⚙️ **Smart Configuration** - VSCode settings optimized per project type, non-destructive merging
+- ⚙️ **Smart Configuration** - VSCode settings optimized per project type, non-destructive merging, with the project venv auto-selected as the default interpreter
 - 💾 **Preference Persistence** - Remember your choices for faster future setups
 - 🔄 **Graceful Cancellation** - Cancel between phases with automatic rollback
 
@@ -135,7 +135,7 @@ Machine learning and AI model development
 
 ## Technology Stack
 
-- **Language**: Python 3.8+
+- **Language**: Python 3.10+
 - **CLI Framework**: Typer (type-safe, beautiful)
 - **Data Validation**: Pydantic (runtime validation)
 - **Configuration**: YAML + PyYAML (human-friendly)
@@ -313,7 +313,7 @@ For detailed troubleshooting guide, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
 **Python not found**:
 
 ```bash
-python --version  # Ensure 3.8+
+python --version  # Ensure 3.10+
 ```
 
 **Command not found**:

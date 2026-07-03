@@ -1,7 +1,5 @@
 """DependencySelection model for capturing user's dependency group selections."""
 
-from typing import Dict, List
-
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from typysetup.models.setup_type import SetupType
@@ -16,19 +14,19 @@ class DependencySelection(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     setup_type_slug: str = Field(..., description="The setup type this selection applies to")
-    selected_groups: Dict[str, bool] = Field(
+    selected_groups: dict[str, bool] = Field(
         ..., description="Maps group_name -> is_selected (e.g., {'core': true, 'dev': true})"
     )
-    all_packages: List[str] = Field(
+    all_packages: list[str] = Field(
         ..., description="Flattened list of all packages from selected groups"
     )
-    group_descriptions: Dict[str, str] = Field(
+    group_descriptions: dict[str, str] = Field(
         default_factory=dict, description="Descriptions of each group for display"
     )
 
     @field_validator("selected_groups", mode="before")
     @classmethod
-    def validate_core_selected(cls, v: Dict[str, bool]) -> Dict[str, bool]:
+    def validate_core_selected(cls, v: dict[str, bool]) -> dict[str, bool]:
         """Ensure core group is always selected."""
         if "core" not in v:
             raise ValueError("Core dependencies must be selected")
@@ -36,7 +34,7 @@ class DependencySelection(BaseModel):
             raise ValueError("Core dependencies cannot be deselected")
         return v
 
-    def get_selected_groups(self) -> List[str]:
+    def get_selected_groups(self) -> list[str]:
         """Get list of selected group names.
 
         Returns:
@@ -44,7 +42,7 @@ class DependencySelection(BaseModel):
         """
         return [name for name, selected in self.selected_groups.items() if selected]
 
-    def get_packages_for_groups(self, group_names: List[str]) -> List[str]:
+    def get_packages_for_groups(self, group_names: list[str]) -> list[str]:
         """Get packages for specific groups from the all_packages list.
 
         This is a simplified method - for actual filtering, use the
@@ -62,7 +60,7 @@ class DependencySelection(BaseModel):
             return self.all_packages
         return self.all_packages
 
-    def validate_against_setup_type(self, setup_type: SetupType) -> List[str]:
+    def validate_against_setup_type(self, setup_type: SetupType) -> list[str]:
         """Validate that all selected groups exist in the setup type.
 
         Args:
@@ -86,7 +84,7 @@ class DependencySelection(BaseModel):
 
         return errors
 
-    def to_install_list(self) -> List[str]:
+    def to_install_list(self) -> list[str]:
         """Get packages formatted for dependency installer (Phase 6).
 
         Returns:

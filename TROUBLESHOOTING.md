@@ -70,9 +70,9 @@ pip install -e .
 1. **Python não instalado ou versão incompatível**
    ```bash
    # Verificar versão do Python
-   python --version  # Deve ser 3.8+
+   python --version  # Deve ser 3.10+
 
-   # Instalar Python 3.8+ se necessário
+   # Instalar Python 3.10+ se necessário
    # Ubuntu/Debian
    sudo apt install python3.11
 
@@ -386,7 +386,7 @@ typysetup setup /path/to/project --verbose
 
 2. **Escolher setup type compatível**
    - Alguns tipos (FastAPI, async-realtime) requerem Python 3.10+
-   - Outros (Django, CLI tools) funcionam com Python 3.8+
+   - Outros (Django, CLI tools) funcionam com Python 3.10+
 
 ---
 

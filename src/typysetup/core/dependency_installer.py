@@ -5,8 +5,8 @@ import re
 import shutil
 import subprocess
 from pathlib import Path
-from typing import List, Optional, Tuple
 
+from packaging.requirements import InvalidRequirement, Requirement
 from rich.console import Console
 
 from typysetup.core.file_backup_manager import FileBackupManager
@@ -35,7 +35,7 @@ class DependencyInstaller:
 
     def install_dependencies(
         self,
-        packages: List[str],
+        packages: list[str],
         package_manager: str,
         python_executable: str,
         project_path: Path,
@@ -111,7 +111,7 @@ class DependencyInstaller:
                 return False
 
     def _install_with_pip(
-        self, packages: List[str], python_executable: str
+        self, packages: list[str], python_executable: str
     ) -> subprocess.CompletedProcess:
         """Install packages using pip.
 
@@ -142,7 +142,7 @@ class DependencyInstaller:
         return result
 
     def _install_with_uv(
-        self, packages: List[str], python_executable: str
+        self, packages: list[str], python_executable: str
     ) -> subprocess.CompletedProcess:
         """Install packages using uv.
 
@@ -177,7 +177,7 @@ class DependencyInstaller:
         return result
 
     def _install_with_poetry(
-        self, packages: List[str], project_path: Path
+        self, packages: list[str], project_path: Path
     ) -> subprocess.CompletedProcess:
         """Install packages using poetry.
 
@@ -225,7 +225,7 @@ class DependencyInstaller:
 
         return result
 
-    def _parse_installed_packages(self, output: str, package_manager: str) -> List[Tuple[str, str]]:
+    def _parse_installed_packages(self, output: str, package_manager: str) -> list[tuple[str, str]]:
         """Parse installed packages and versions from installation output.
 
         Args:
@@ -235,7 +235,7 @@ class DependencyInstaller:
         Returns:
             List of (package_name, version) tuples
         """
-        packages: List[Tuple[str, str]] = []
+        packages: list[tuple[str, str]] = []
 
         if package_manager == "pip":
             # Pip output format: "Successfully installed package1-version package2-version ..."
@@ -274,7 +274,7 @@ class DependencyInstaller:
         logger.debug(f"Parsed {len(packages)} packages from {package_manager} output")
         return packages
 
-    def _get_installed_version(self, package_name: str, python_executable: str) -> Optional[str]:
+    def _get_installed_version(self, package_name: str, python_executable: str) -> str | None:
         """Get installed version of a package.
 
         Args:
@@ -312,15 +312,18 @@ class DependencyInstaller:
         Returns:
             Package name only
         """
-        # Remove version specifiers and extras
-        # Format: package[extra1,extra2]>=version,<version2
-        # Extract just the package name before [ or >= or > or < or == or !=
+        # Prefer PEP 508 parsing for correctness across extras, version
+        # specifiers, environment markers, and URL requirements.
+        try:
+            return Requirement(package_spec).name
+        except InvalidRequirement:
+            logger.debug(
+                f"Could not parse requirement '{package_spec}'; falling back to manual parsing"
+            )
 
-        # First remove extras (everything in brackets)
+        # Fallback: strip extras, then version specifiers / markers
         package_name = re.sub(r"\[.*?\]", "", package_spec)
-
-        # Then remove version specifiers
-        package_name = re.split(r"[><=!~]", package_name)[0].strip()
+        package_name = re.split(r"[><=!~;\s]", package_name)[0].strip()
 
         return package_name
 

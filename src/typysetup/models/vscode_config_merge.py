@@ -1,6 +1,6 @@
 """Merging strategies for VSCode configurations with conflict resolution."""
 
-from typing import Any, Dict, List, Set
+from typing import Any
 
 
 class DeepMergeStrategy:
@@ -11,7 +11,7 @@ class DeepMergeStrategy:
     """
 
     @staticmethod
-    def deep_merge_dicts(existing: Dict[str, Any], new: Dict[str, Any]) -> Dict[str, Any]:
+    def deep_merge_dicts(existing: dict[str, Any], new: dict[str, Any]) -> dict[str, Any]:
         """Deep merge new config into existing config.
 
         Args:
@@ -44,7 +44,7 @@ class DeepMergeStrategy:
         return result
 
     @staticmethod
-    def deduplicate_extensions(existing: List[str], new: List[str]) -> List[str]:
+    def deduplicate_extensions(existing: list[str], new: list[str]) -> list[str]:
         """Deduplicate extensions, preserving order.
 
         Args:
@@ -61,7 +61,7 @@ class DeepMergeStrategy:
             >>> result == ["ms-python.python", "charliermarsh.ruff", "ms-python.vscode-pylance"]
             True
         """
-        seen: Set[str] = set(existing)
+        seen: set[str] = set(existing)
         result = existing.copy()
 
         for ext_id in new:
@@ -73,8 +73,8 @@ class DeepMergeStrategy:
 
     @staticmethod
     def merge_launch_configurations(
-        existing: List[Dict[str, Any]], new: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+        existing: list[dict[str, Any]], new: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         """Merge launch configurations with name-based deduplication.
 
         Args:
@@ -105,8 +105,8 @@ class DeepMergeStrategy:
 
     @staticmethod
     def detect_overrides(
-        existing: Dict[str, Any], new: Dict[str, Any]
-    ) -> Dict[str, tuple[Any, Any]]:
+        existing: dict[str, Any], new: dict[str, Any]
+    ) -> dict[str, tuple[Any, Any]]:
         """Detect and report configuration overrides.
 
         Args:
@@ -125,10 +125,10 @@ class DeepMergeStrategy:
             >>> overrides == {"python.linting.enabled": (False, True)}
             True
         """
-        overrides: Dict[str, tuple[Any, Any]] = {}
+        overrides: dict[str, tuple[Any, Any]] = {}
 
         def check_overrides(
-            existing_dict: Dict[str, Any], new_dict: Dict[str, Any], prefix: str = ""
+            existing_dict: dict[str, Any], new_dict: dict[str, Any], prefix: str = ""
         ) -> None:
             for key, new_value in new_dict.items():
                 full_key = f"{prefix}{key}" if not prefix else f"{prefix}.{key}"

@@ -1,10 +1,10 @@
 """Setup orchestrator for coordinating the interactive setup flow."""
 
+import logging
 import signal
 import sys
 import time
 from pathlib import Path
-from typing import Optional
 
 import questionary
 from rich.console import Console
@@ -27,6 +27,7 @@ from typysetup.utils.prompts import PromptManager
 from typysetup.utils.rollback_context import RollbackContext
 
 console = Console()
+logger = logging.getLogger(__name__)
 
 
 class SetupOrchestrator:
@@ -39,7 +40,7 @@ class SetupOrchestrator:
     - User preference loading and saving
     """
 
-    def __init__(self, config_loader: Optional[ConfigLoader] = None):
+    def __init__(self, config_loader: ConfigLoader | None = None):
         """Initialize orchestrator with optional config loader.
 
         Args:
@@ -53,14 +54,14 @@ class SetupOrchestrator:
         self.pyproject_generator = PyprojectGenerator()
         self.preference_manager = PreferenceManager()
         self.project_config_manager = ProjectConfigManager()
-        self.setup_type: Optional[SetupType] = None
-        self.project_path: Optional[Path] = None
-        self.project_config: Optional[ProjectConfiguration] = None
-        self.dependency_selection: Optional[DependencySelection] = None
-        self.selected_extensions: Optional[list] = None
-        self.project_metadata: Optional[ProjectMetadata] = None
-        self.setup_start_time: Optional[float] = None
-        self.rollback: Optional[RollbackContext] = None
+        self.setup_type: SetupType | None = None
+        self.project_path: Path | None = None
+        self.project_config: ProjectConfiguration | None = None
+        self.dependency_selection: DependencySelection | None = None
+        self.selected_extensions: list | None = None
+        self.project_metadata: ProjectMetadata | None = None
+        self.setup_start_time: float | None = None
+        self.rollback: RollbackContext | None = None
         self.cancelled = False
 
     def _signal_handler(self, signum, frame):
@@ -77,7 +78,7 @@ class SetupOrchestrator:
             console.print("[dim]Triggering cleanup...[/dim]")
         raise KeyboardInterrupt()
 
-    def run_setup_wizard(self, project_path: str) -> Optional[ProjectConfiguration]:
+    def run_setup_wizard(self, project_path: str) -> ProjectConfiguration | None:
         """Run the complete interactive setup wizard.
 
         Args:
@@ -270,8 +271,8 @@ class SetupOrchestrator:
                         success=False,
                         duration_seconds=duration_seconds,
                     )
-                except Exception:
-                    pass
+                except Exception as history_error:
+                    logger.warning(f"Could not record setup history: {history_error}")
             return None
         except Exception as e:
             console.print(f"[red]Error during setup: {e}[/red]")
@@ -298,8 +299,8 @@ class SetupOrchestrator:
                         success=False,
                         duration_seconds=duration_seconds,
                     )
-                except Exception:
-                    pass
+                except Exception as history_error:
+                    logger.warning(f"Could not record setup history: {history_error}")
             return None
         finally:
             # Restore original signal handler
@@ -325,7 +326,7 @@ class SetupOrchestrator:
         except KeyboardInterrupt:
             return False
 
-    def _display_setup_summary(self, duration_seconds: Optional[float] = None) -> None:
+    def _display_setup_summary(self, duration_seconds: float | None = None) -> None:
         """Display comprehensive setup summary with next steps.
 
         Args:
@@ -523,8 +524,8 @@ class SetupOrchestrator:
             ):
                 default_manager = preferences.preferred_manager
                 console.print(f"[dim]Default from preferences: {default_manager}[/dim]")
-        except Exception:
-            pass
+        except Exception as preference_error:
+            logger.warning(f"Could not read preferred manager from preferences: {preference_error}")
 
         chosen = questionary.select(
             "Select package manager:",
@@ -560,7 +561,7 @@ class SetupOrchestrator:
 
         return confirm if confirm is not None else True
 
-    def _select_dependency_groups(self) -> Optional[DependencySelection]:
+    def _select_dependency_groups(self) -> DependencySelection | None:
         """Prompt user to select which dependency groups to install.
 
         Returns:
@@ -568,7 +569,7 @@ class SetupOrchestrator:
         """
         return self.prompt_manager.prompt_dependency_groups(self.setup_type)
 
-    def _select_vscode_extensions(self) -> Optional[list]:
+    def _select_vscode_extensions(self) -> list | None:
         """Prompt user to select which VSCode extensions to install.
 
         Returns:
@@ -576,7 +577,7 @@ class SetupOrchestrator:
         """
         return self.prompt_manager.prompt_vscode_extensions(self.setup_type)
 
-    def _collect_project_metadata(self) -> Optional[ProjectMetadata]:
+    def _collect_project_metadata(self) -> ProjectMetadata | None:
         """Collect project metadata (name, description, author, email).
 
         Returns:

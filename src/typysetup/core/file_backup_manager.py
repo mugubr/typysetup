@@ -1,9 +1,8 @@
 """File backup and restore manager for safe config updates."""
 
 import shutil
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import List, Optional
 
 
 class FileBackupManager:
@@ -16,7 +15,7 @@ class FileBackupManager:
         pass
 
     @staticmethod
-    def create_backup(filepath: Path) -> Optional[Path]:
+    def create_backup(filepath: Path) -> Path | None:
         """Create a timestamped backup of a file.
 
         Args:
@@ -35,7 +34,7 @@ class FileBackupManager:
             return None
 
         # Create backup filename with ISO timestamp including microseconds
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         timestamp = now.strftime("%Y%m%dT%H%M%S") + f".{now.microsecond:06d}Z"
         backup_path = (
             filepath.parent / f"{filepath.name}{FileBackupManager.BACKUP_SUFFIX}.{timestamp}"
@@ -71,7 +70,7 @@ class FileBackupManager:
             raise OSError(f"Failed to restore backup {backup_path} to {filepath}: {e}") from e
 
     @staticmethod
-    def list_backups(filepath: Path) -> List[Path]:
+    def list_backups(filepath: Path) -> list[Path]:
         """List all backups for a file, sorted by timestamp (newest first).
 
         Args:

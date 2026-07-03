@@ -1,7 +1,7 @@
 """SetupTypeRegistry for managing and querying setup types."""
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from typysetup.core.config_loader import ConfigLoader
 from typysetup.models import SetupType
@@ -20,14 +20,14 @@ class SetupTypeRegistry:
     - Cache loaded setup types for performance
     """
 
-    def __init__(self, config_loader: Optional[ConfigLoader] = None):
+    def __init__(self, config_loader: ConfigLoader | None = None):
         """Initialize registry with optional config loader.
 
         Args:
             config_loader: ConfigLoader instance. If None, creates one.
         """
         self.config_loader = config_loader or ConfigLoader()
-        self._setup_types: Dict[str, SetupType] = {}
+        self._setup_types: dict[str, SetupType] = {}
         self._loaded = False
 
     def _ensure_loaded(self) -> None:
@@ -71,7 +71,7 @@ class SetupTypeRegistry:
             return True
         return False
 
-    def get(self, slug: str) -> Optional[SetupType]:
+    def get(self, slug: str) -> SetupType | None:
         """Get a setup type by slug.
 
         Args:
@@ -83,7 +83,7 @@ class SetupTypeRegistry:
         self._ensure_loaded()
         return self._setup_types.get(slug)
 
-    def get_all(self) -> List[SetupType]:
+    def get_all(self) -> list[SetupType]:
         """Get all registered setup types.
 
         Returns:
@@ -92,7 +92,7 @@ class SetupTypeRegistry:
         self._ensure_loaded()
         return list(self._setup_types.values())
 
-    def get_slugs(self) -> List[str]:
+    def get_slugs(self) -> list[str]:
         """Get all setup type slugs.
 
         Returns:
@@ -101,7 +101,7 @@ class SetupTypeRegistry:
         self._ensure_loaded()
         return list(self._setup_types.keys())
 
-    def find_by_tag(self, tag: str) -> List[SetupType]:
+    def find_by_tag(self, tag: str) -> list[SetupType]:
         """Find setup types by tag.
 
         Args:
@@ -113,7 +113,7 @@ class SetupTypeRegistry:
         self._ensure_loaded()
         return [st for st in self._setup_types.values() if st.tags and tag in st.tags]
 
-    def find_by_tags(self, tags: List[str], match_all: bool = False) -> List[SetupType]:
+    def find_by_tags(self, tags: list[str], match_all: bool = False) -> list[SetupType]:
         """Find setup types by multiple tags.
 
         Args:
@@ -130,7 +130,7 @@ class SetupTypeRegistry:
                 result.append(st)
         return result
 
-    def find_by_python_version(self, version: str) -> List[SetupType]:
+    def find_by_python_version(self, version: str) -> list[SetupType]:
         """Find setup types compatible with a Python version.
 
         Args:
@@ -142,7 +142,7 @@ class SetupTypeRegistry:
         self._ensure_loaded()
         return [st for st in self._setup_types.values() if st.requires_python_version(version)]
 
-    def find_by_manager(self, manager: str) -> List[SetupType]:
+    def find_by_manager(self, manager: str) -> list[SetupType]:
         """Find setup types supporting a package manager.
 
         Args:
@@ -154,7 +154,7 @@ class SetupTypeRegistry:
         self._ensure_loaded()
         return [st for st in self._setup_types.values() if st.supports_manager(manager)]
 
-    def find_by_capability(self, capability: str) -> List[SetupType]:
+    def find_by_capability(self, capability: str) -> list[SetupType]:
         """Find setup types with a specific capability.
 
         Capabilities are determined by tags. This is an alias for find_by_tag.
@@ -167,7 +167,7 @@ class SetupTypeRegistry:
         """
         return self.find_by_tag(capability)
 
-    def search(self, query: str) -> List[SetupType]:
+    def search(self, query: str) -> list[SetupType]:
         """Search setup types by name, description, or slug.
 
         Args:
@@ -191,7 +191,7 @@ class SetupTypeRegistry:
 
         return results
 
-    def validate_all(self) -> List[str]:
+    def validate_all(self) -> list[str]:
         """Validate all registered setup types.
 
         Returns:
@@ -214,7 +214,7 @@ class SetupTypeRegistry:
 
         return errors
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get statistics about registered setup types.
 
         Returns:
@@ -225,7 +225,7 @@ class SetupTypeRegistry:
         total_types = len(self._setup_types)
         total_packages = 0
         all_tags = set()
-        manager_count: Dict[str, int] = {}
+        manager_count: dict[str, int] = {}
 
         for st in self._setup_types.values():
             total_packages += st.get_total_dependency_count()

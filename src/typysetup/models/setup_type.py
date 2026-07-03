@@ -1,6 +1,6 @@
 """SetupType data model for setup type configuration."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -45,25 +45,25 @@ class SetupType(BaseModel):
     python_version: str = Field(
         ..., description="Minimum Python version required (e.g., '3.8+', '3.10-3.12')"
     )
-    supported_managers: List[str] = Field(
-        ..., min_items=1, description="Package managers available for this type"
+    supported_managers: list[str] = Field(
+        ..., min_length=1, description="Package managers available for this type"
     )
-    vscode_settings: Optional[Dict[str, Any]] = Field(
+    vscode_settings: dict[str, Any] | None = Field(
         default=None, description="VSCode workspace settings to apply"
     )
-    vscode_extensions: Optional[List[str]] = Field(
+    vscode_extensions: list[str] | None = Field(
         default=None, description="VSCode extensions to recommend"
     )
-    vscode_launch_config: Optional[Dict[str, Any]] = Field(
+    vscode_launch_config: dict[str, Any] | None = Field(
         default=None, description="VSCode debug launch configuration"
     )
-    dependencies: Dict[str, List[str]] = Field(..., description="Grouped dependencies to install")
-    tags: Optional[List[str]] = Field(default=None, description="Search/filter tags")
-    docs_url: Optional[str] = Field(default=None, description="Link to documentation")
+    dependencies: dict[str, list[str]] = Field(..., description="Grouped dependencies to install")
+    tags: list[str] | None = Field(default=None, description="Search/filter tags")
+    docs_url: str | None = Field(default=None, description="Link to documentation")
 
     @field_validator("supported_managers", mode="before")
     @classmethod
-    def validate_managers(cls, v: List[str]) -> List[str]:
+    def validate_managers(cls, v: list[str]) -> list[str]:
         """Validate that managers are one of the supported options."""
         allowed = {"uv", "pip", "poetry"}
         for manager in v:
@@ -73,7 +73,7 @@ class SetupType(BaseModel):
 
     @field_validator("dependencies", mode="before")
     @classmethod
-    def validate_dependencies(cls, v: Dict[str, List[str]]) -> Dict[str, List[str]]:
+    def validate_dependencies(cls, v: dict[str, list[str]]) -> dict[str, list[str]]:
         """Validate that dependencies has at least 'core' group."""
         if "core" not in v:
             raise ValueError("Dependencies must have at least a 'core' group")
@@ -83,7 +83,7 @@ class SetupType(BaseModel):
 
     @field_validator("vscode_extensions", mode="before")
     @classmethod
-    def validate_extensions(cls, v: Optional[List[str]]) -> Optional[List[str]]:
+    def validate_extensions(cls, v: list[str] | None) -> list[str] | None:
         """Validate VSCode extension IDs format (publisher.name)."""
         if v is None:
             return v
@@ -92,21 +92,21 @@ class SetupType(BaseModel):
                 raise ValueError(f"Invalid extension ID: {ext}. Format should be 'publisher.name'")
         return v
 
-    def get_all_dependencies(self) -> List[str]:
+    def get_all_dependencies(self) -> list[str]:
         """Get all dependencies (core + dev)."""
         deps = self.dependencies.get("core", []).copy()
         deps.extend(self.dependencies.get("dev", []))
         return deps
 
-    def get_core_dependencies(self) -> List[str]:
+    def get_core_dependencies(self) -> list[str]:
         """Get only core dependencies."""
         return self.dependencies.get("core", []).copy()
 
-    def get_optional_dependencies(self) -> List[str]:
+    def get_optional_dependencies(self) -> list[str]:
         """Get only optional dependencies."""
         return self.dependencies.get("optional", []).copy()
 
-    def get_dependency_groups(self) -> List[str]:
+    def get_dependency_groups(self) -> list[str]:
         """Get all dependency group names in this setup type.
 
         Returns:
@@ -114,7 +114,7 @@ class SetupType(BaseModel):
         """
         return list(self.dependencies.keys())
 
-    def get_group_by_name(self, group_name: str) -> Optional[List[str]]:
+    def get_group_by_name(self, group_name: str) -> list[str] | None:
         """Get dependencies for a specific group.
 
         Args:
@@ -148,7 +148,7 @@ class SetupType(BaseModel):
         packages = self.get_group_by_name(group_name)
         return len(packages) if packages else 0
 
-    def filter_dependencies_by_groups(self, group_names: List[str]) -> Dict[str, List[str]]:
+    def filter_dependencies_by_groups(self, group_names: list[str]) -> dict[str, list[str]]:
         """Get dependencies filtered by group names.
 
         Args:
@@ -163,7 +163,7 @@ class SetupType(BaseModel):
                 result[group_name] = self.dependencies[group_name].copy()
         return result
 
-    def get_recommended_installation_order(self) -> List[str]:
+    def get_recommended_installation_order(self) -> list[str]:
         """Get groups in recommended installation order.
 
         Core dependencies should be installed first, then dev, then optional.
@@ -183,8 +183,8 @@ class SetupType(BaseModel):
         return result
 
     def get_all_dependencies_by_group(
-        self, include_groups: Optional[List[str]] = None
-    ) -> Dict[str, List[str]]:
+        self, include_groups: list[str] | None = None
+    ) -> dict[str, list[str]]:
         """Get all dependencies organized by group.
 
         Args:
@@ -245,7 +245,7 @@ class SetupType(BaseModel):
         """
         return len(self.vscode_extensions) if self.vscode_extensions else 0
 
-    def matches_tags(self, tags: List[str], match_all: bool = False) -> bool:
+    def matches_tags(self, tags: list[str], match_all: bool = False) -> bool:
         """Check if setup type has specified tags.
 
         Args:

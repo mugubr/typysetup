@@ -1,7 +1,6 @@
 """DependencyGroup model for organizing dependencies by category."""
 
 import re
-from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -22,10 +21,10 @@ class DependencyGroup(BaseModel):
         pattern=r"^[a-z0-9-]+$",
         description="Group identifier (core, dev, optional, testing, etc.)",
     )
-    packages: List[str] = Field(
+    packages: list[str] = Field(
         default=..., min_length=1, description="Package specifications (e.g., fastapi>=0.104.0)"
     )
-    description: Optional[str] = Field(
+    description: str | None = Field(
         default=None, max_length=200, description="Human-readable description of the group"
     )
     required: bool = Field(
@@ -38,7 +37,7 @@ class DependencyGroup(BaseModel):
 
     @field_validator("packages", mode="before")
     @classmethod
-    def validate_packages(cls, v: List[str]) -> List[str]:
+    def validate_packages(cls, v: list[str]) -> list[str]:
         """Validate that all packages have valid pip format."""
         if not v:
             raise ValueError("Package list cannot be empty")
@@ -53,7 +52,7 @@ class DependencyGroup(BaseModel):
                 )
         return v
 
-    def get_package_names(self) -> List[str]:
+    def get_package_names(self) -> list[str]:
         """Get package names without version specifications.
 
         Returns:
@@ -75,7 +74,7 @@ class DependencyGroup(BaseModel):
         """
         return len(self.packages)
 
-    def filter_by_version_spec(self, spec: str) -> List[str]:
+    def filter_by_version_spec(self, spec: str) -> list[str]:
         """Filter packages by version specification operator.
 
         Args:

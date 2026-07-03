@@ -1,7 +1,6 @@
 """ProjectMetadata model for capturing user's project information."""
 
 import re
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -21,17 +20,17 @@ class ProjectMetadata(BaseModel):
         max_length=50,
         description="Project name (must be valid Python package name)",
     )
-    project_description: Optional[str] = Field(
+    project_description: str | None = Field(
         default=None,
         max_length=500,
         description="Project description (optional)",
     )
-    author_name: Optional[str] = Field(
+    author_name: str | None = Field(
         default=None,
         max_length=100,
         description="Author name (optional)",
     )
-    author_email: Optional[str] = Field(
+    author_email: str | None = Field(
         default=None,
         max_length=100,
         description="Author email (optional, must be valid format)",
@@ -75,7 +74,7 @@ class ProjectMetadata(BaseModel):
 
     @field_validator("project_description", mode="before")
     @classmethod
-    def validate_description(cls, v: Optional[str]) -> Optional[str]:
+    def validate_description(cls, v: str | None) -> str | None:
         """Validate and normalize description."""
         if v is None:
             return v
@@ -88,7 +87,7 @@ class ProjectMetadata(BaseModel):
 
     @field_validator("author_name", mode="before")
     @classmethod
-    def validate_author_name(cls, v: Optional[str]) -> Optional[str]:
+    def validate_author_name(cls, v: str | None) -> str | None:
         """Validate and normalize author name."""
         if v is None:
             return v
@@ -101,7 +100,7 @@ class ProjectMetadata(BaseModel):
 
     @field_validator("author_email", mode="before")
     @classmethod
-    def validate_author_email(cls, v: Optional[str]) -> Optional[str]:
+    def validate_author_email(cls, v: str | None) -> str | None:
         """Validate email format."""
         if v is None:
             return v

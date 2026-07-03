@@ -5,11 +5,12 @@ import logging
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import ValidationError
 
 from typysetup.models.user_preference import SetupHistoryEntry, UserPreference
+from typysetup.utils.datetime_utils import utc_now
 from typysetup.utils.paths import ensure_config_dir_exists, get_preferences_file_path
 
 logger = logging.getLogger(__name__)
@@ -35,7 +36,7 @@ class PreferenceManager:
     backup/recovery mechanisms.
     """
 
-    def __init__(self, preferences_path: Optional[Path] = None):
+    def __init__(self, preferences_path: Path | None = None):
         """Initialize preference manager.
 
         Args:
@@ -43,7 +44,7 @@ class PreferenceManager:
                 If None, uses default from paths.py
         """
         self.preferences_path = preferences_path or get_preferences_file_path()
-        self._preferences: Optional[UserPreference] = None
+        self._preferences: UserPreference | None = None
 
     def load_preferences(self, create_if_missing: bool = True) -> UserPreference:
         """Load user preferences from disk.
@@ -133,7 +134,7 @@ class PreferenceManager:
             raise PreferenceSaveError(f"Cannot create config directory: {e}") from e
 
         # Update last_updated timestamp
-        preferences.last_updated = datetime.utcnow()
+        preferences.last_updated = utc_now()
 
         # Create backup of existing file if it exists
         if self.preferences_path.exists():
@@ -169,8 +170,10 @@ class PreferenceManager:
             if temp_path.exists():
                 try:
                     temp_path.unlink()
-                except Exception:
-                    pass
+                except OSError as cleanup_error:
+                    logger.warning(
+                        f"Could not remove temporary preferences file {temp_path}: {cleanup_error}"
+                    )
             raise PreferenceSaveError(f"Error saving preferences: {e}") from e
 
     def update_preference(self, key: str, value: Any) -> None:
@@ -206,11 +209,11 @@ class PreferenceManager:
         self,
         setup_type_slug: str,
         project_path: str,
-        project_name: Optional[str],
-        python_version: Optional[str],
-        package_manager: Optional[str],
+        project_name: str | None,
+        python_version: str | None,
+        package_manager: str | None,
         success: bool,
-        duration_seconds: Optional[float] = None,
+        duration_seconds: float | None = None,
     ) -> None:
         """Add an entry to setup history.
 
@@ -226,7 +229,7 @@ class PreferenceManager:
         prefs = self.load_preferences()
 
         entry = SetupHistoryEntry(
-            timestamp=datetime.utcnow(),
+            timestamp=utc_now(),
             setup_type_slug=setup_type_slug,
             project_path=project_path,
             project_name=project_name,
@@ -244,11 +247,11 @@ class PreferenceManager:
         self,
         setup_type_slug: str,
         project_path: str,
-        project_name: Optional[str],
+        project_name: str | None,
         python_version: str,
         package_manager: str,
         success: bool,
-        duration_seconds: Optional[float] = None,
+        duration_seconds: float | None = None,
     ) -> None:
         """Update preferences after a setup operation.
 
@@ -273,7 +276,7 @@ class PreferenceManager:
 
         # Add history entry
         entry = SetupHistoryEntry(
-            timestamp=datetime.utcnow(),
+            timestamp=utc_now(),
             setup_type_slug=setup_type_slug,
             project_path=project_path,
             project_name=project_name,
