@@ -101,7 +101,7 @@ class PyprojectGenerator:
         min_version = python_version.rstrip("+")
 
         # Build [project] section
-        project_section = {
+        project_section: dict[str, Any] = {
             "name": metadata.project_name,
             "version": "0.1.0",
             "description": metadata.project_description or "",

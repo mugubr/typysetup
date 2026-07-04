@@ -61,6 +61,28 @@ def _stub_venv_creation(monkeypatch):
     )
 
 
+def make_select_mock(setup_type_name, package_manager="uv"):
+    """Create a questionary.select mock keyed on the prompt message.
+
+    Returns the given setup type name for the setup-type prompt, the given
+    package manager for the manager prompt, and the first choice otherwise.
+    """
+
+    class MockSelect:
+        def __init__(self, message, choices, **kwargs):
+            self.message = message
+            self.choices = choices
+
+        def ask(self):
+            if "setup type" in self.message.lower():
+                return setup_type_name
+            if "package manager" in self.message.lower():
+                return package_manager
+            return self.choices[0] if self.choices else None
+
+    return MockSelect
+
+
 def create_mock_checkbox():
     """Create a mock checkbox that returns all options."""
 
@@ -213,86 +235,76 @@ class TestCompleteSetupFlow:
             assert config_data["package_manager"] == "uv"
             assert config_data["status"] == "success"
 
-    @pytest.mark.skip(
-        reason="Pre-existing E2E flow test with bespoke mocks; rebuilt in 2.1.0 orchestrator phase refactor"
-    )
-    def test_setup_flow_data_science_with_pip(self, tmp_path, cli_runner, mock_subprocess_run):
+    def test_setup_flow_data_science_with_pip(
+        self, tmp_path, cli_runner, mock_subprocess_run, mock_questionary_responses, monkeypatch
+    ):
         """Test complete setup flow for Data Science with pip."""
+        # Arrange
+        home_dir = tmp_path / "home"
+        home_dir.mkdir()
+        monkeypatch.setenv("HOME", str(home_dir))
+
         project_path = tmp_path / "ml-analysis"
         project_path.mkdir()
 
-        # Mock to select Data Science and pip
-        class MockSelect:
-            def __init__(self, message, choices, **kwargs):
-                self.choices = choices
-
-            def ask(self):
-                if "setup type" in str(self.choices):
-                    return "Data Science"
-                return "pip"
-
-        class MockConfirm:
-            def __init__(self, message, **kwargs):
-                pass
-
-            def ask(self):
-                return True
-
+        # Act: select Data Science with pip and confirm every prompt
         with (
             patch("subprocess.run", side_effect=mock_subprocess_run),
-            patch("questionary.select", MockSelect),
-            patch("questionary.confirm", MockConfirm),
-            patch("questionary.checkbox", create_mock_checkbox()),
+            patch("questionary.select", make_select_mock("Data Science", "pip")),
+            patch("questionary.confirm", mock_questionary_responses["confirm"]),
+            patch("questionary.checkbox", mock_questionary_responses["checkbox"]),
         ):
             result = cli_runner.invoke(app, ["setup", str(project_path)])
 
-            assert result.exit_code == 0
+        # Assert
+        assert result.exit_code == 0
 
-            # Verify venv
-            assert (project_path / "venv").exists()
+        # Verify venv
+        assert (project_path / "venv").exists()
 
-            # Verify config
-            config_file = project_path / ".typysetup" / "config.json"
-            assert config_file.exists()
-            config_data = json.loads(config_file.read_text())
-            assert config_data["setup_type_slug"] == "data-science"
-            assert config_data["package_manager"] == "pip"
+        # Verify config
+        config_file = project_path / ".typysetup" / "config.json"
+        assert config_file.exists()
+        config_data = json.loads(config_file.read_text())
+        assert config_data["setup_type_slug"] == "data-science"
+        assert config_data["package_manager"] == "pip"
+        assert config_data["status"] == "success"
 
-    @pytest.mark.skip(
-        reason="Pre-existing E2E flow test with bespoke mocks; rebuilt in 2.1.0 orchestrator phase refactor"
-    )
-    def test_setup_flow_with_verbose_mode(self, tmp_path, cli_runner, mock_subprocess_run):
+    def test_setup_flow_with_verbose_mode(
+        self, tmp_path, cli_runner, mock_subprocess_run, mock_questionary_responses, monkeypatch
+    ):
         """Test setup flow with verbose output enabled."""
+        # Arrange
+        home_dir = tmp_path / "home"
+        home_dir.mkdir()
+        monkeypatch.setenv("HOME", str(home_dir))
+
         project_path = tmp_path / "test-verbose"
         project_path.mkdir()
 
-        class MockSelect:
-            def ask(self):
-                return "CLI Tool"
-
-        class MockConfirm:
-            def ask(self):
-                return True
-
+        # Act
         with (
             patch("subprocess.run", side_effect=mock_subprocess_run),
-            patch("questionary.select", MockSelect),
-            patch("questionary.confirm", MockConfirm),
-            patch("questionary.checkbox", create_mock_checkbox()),
+            patch("questionary.select", make_select_mock("CLI Tool")),
+            patch("questionary.confirm", mock_questionary_responses["confirm"]),
+            patch("questionary.checkbox", mock_questionary_responses["checkbox"]),
         ):
             result = cli_runner.invoke(app, ["setup", str(project_path), "--verbose"])
 
-            assert result.exit_code == 0
-            # Verbose mode should be enabled (actual verbose output depends on implementation)
-            assert "Setup configuration created successfully" in result.stdout
+        # Assert: verbose mode should still complete the full flow successfully
+        assert result.exit_code == 0
+        assert "Setup configuration created successfully" in result.stdout
+        assert (project_path / ".typysetup" / "config.json").exists()
 
-    @pytest.mark.skip(
-        reason="Pre-existing E2E flow test with bespoke mocks; rebuilt in 2.1.0 orchestrator phase refactor"
-    )
     def test_setup_flow_preserves_existing_vscode_settings(
-        self, tmp_path, cli_runner, mock_subprocess_run
+        self, tmp_path, cli_runner, mock_subprocess_run, mock_questionary_responses, monkeypatch
     ):
         """Test that setup preserves existing VSCode settings."""
+        # Arrange
+        home_dir = tmp_path / "home"
+        home_dir.mkdir()
+        monkeypatch.setenv("HOME", str(home_dir))
+
         project_path = tmp_path / "existing-project"
         project_path.mkdir()
 
@@ -306,78 +318,65 @@ class TestCompleteSetupFlow:
         }
         (vscode_dir / "settings.json").write_text(json.dumps(existing_settings, indent=2))
 
-        class MockSelect:
-            def ask(self):
-                return "FastAPI"
-
-        class MockConfirm:
-            def ask(self):
-                return True
-
+        # Act
         with (
             patch("subprocess.run", side_effect=mock_subprocess_run),
-            patch("questionary.select", MockSelect),
-            patch("questionary.confirm", MockConfirm),
-            patch("questionary.checkbox", create_mock_checkbox()),
+            patch("questionary.select", make_select_mock("FastAPI")),
+            patch("questionary.confirm", mock_questionary_responses["confirm"]),
+            patch("questionary.checkbox", mock_questionary_responses["checkbox"]),
         ):
             result = cli_runner.invoke(app, ["setup", str(project_path)])
 
-            assert result.exit_code == 0
+        # Assert
+        assert result.exit_code == 0
 
-            # Verify settings were merged
-            merged_settings = json.loads((vscode_dir / "settings.json").read_text())
+        # Verify settings were merged
+        merged_settings = json.loads((vscode_dir / "settings.json").read_text())
 
-            # Existing settings preserved
-            assert merged_settings["editor.fontSize"] == 14
-            assert merged_settings["workbench.colorTheme"] == "Monokai"
+        # Existing settings preserved
+        assert merged_settings["editor.fontSize"] == 14
+        assert merged_settings["workbench.colorTheme"] == "Monokai"
 
-            # Setup settings applied (override)
-            assert merged_settings["python.linting.enabled"] is True
-            assert "python.defaultInterpreterPath" in merged_settings
+        # Setup settings applied (override)
+        assert merged_settings["python.linting.enabled"] is True
+        assert "python.defaultInterpreterPath" in merged_settings
 
-    @pytest.mark.skip(
-        reason="Pre-existing E2E flow test with bespoke mocks; rebuilt in 2.1.0 orchestrator phase refactor"
-    )
-    def test_setup_flow_updates_user_preferences(self, tmp_path, cli_runner, mock_subprocess_run):
+    def test_setup_flow_updates_user_preferences(
+        self, tmp_path, cli_runner, mock_subprocess_run, mock_questionary_responses, monkeypatch
+    ):
         """Test that setup updates user preferences and history."""
+        # Arrange: isolate preferences under a temporary HOME
+        home_dir = tmp_path / "home"
+        home_dir.mkdir()
+        monkeypatch.setenv("HOME", str(home_dir))
+
         project_path = tmp_path / "test-preferences"
         project_path.mkdir()
 
-        # Clear existing preferences
-        pref_manager = PreferenceManager()
-        if pref_manager.preferences_path.exists():
-            pref_manager.preferences_path.unlink()
-
-        class MockSelect:
-            def ask(self):
-                return "FastAPI"
-
-        class MockConfirm:
-            def ask(self):
-                return True
-
+        # Act
         with (
             patch("subprocess.run", side_effect=mock_subprocess_run),
-            patch("questionary.select", MockSelect),
-            patch("questionary.confirm", MockConfirm),
-            patch("questionary.checkbox", create_mock_checkbox()),
+            patch("questionary.select", make_select_mock("FastAPI", "uv")),
+            patch("questionary.confirm", mock_questionary_responses["confirm"]),
+            patch("questionary.checkbox", mock_questionary_responses["checkbox"]),
         ):
             result = cli_runner.invoke(app, ["setup", str(project_path)])
 
-            assert result.exit_code == 0
+        # Assert
+        assert result.exit_code == 0
 
-            # Verify preferences were updated
-            prefs = pref_manager.load_preferences()
+        # Verify preferences were updated (in the isolated HOME)
+        prefs = PreferenceManager().load_preferences()
 
-            # Check history
-            assert len(prefs.setup_history) > 0
-            last_setup = prefs.setup_history[-1]
-            assert last_setup.setup_type_slug == "fastapi"
-            assert last_setup.package_manager == "uv"
-            assert last_setup.success is True
+        # Check history
+        assert len(prefs.setup_history) > 0
+        last_setup = prefs.setup_history[-1]
+        assert last_setup.setup_type_slug == "fastapi"
+        assert last_setup.package_manager == "uv"
+        assert last_setup.success is True
 
-            # Check preferred setup types updated
-            assert "fastapi" in prefs.preferred_setup_types
+        # Check preferred setup types updated
+        assert "fastapi" in prefs.preferred_setup_types
 
     def test_setup_flow_handles_missing_directory(self, cli_runner, mock_subprocess_run):
         """Test that setup handles missing project directory gracefully."""
@@ -403,29 +402,24 @@ class TestCompleteSetupFlow:
             # Exact behavior depends on implementation
             assert result.exit_code in [0, 1]
 
-    @pytest.mark.skip(
-        reason="Pre-existing E2E flow test with bespoke mocks; rebuilt in 2.1.0 orchestrator phase refactor"
-    )
     def test_setup_flow_multiple_setups_in_sequence(
-        self, tmp_path, cli_runner, mock_subprocess_run
+        self, tmp_path, cli_runner, mock_subprocess_run, mock_questionary_responses, monkeypatch
     ):
         """Test running multiple setups in sequence."""
+        # Arrange: isolate preferences under a temporary HOME
+        home_dir = tmp_path / "home"
+        home_dir.mkdir()
+        monkeypatch.setenv("HOME", str(home_dir))
+
         # First setup: FastAPI
         project1 = tmp_path / "project1"
         project1.mkdir()
 
-        class MockSelect1:
-            def ask(self):
-                return "FastAPI"
-
-        class MockConfirm:
-            def ask(self):
-                return True
-
         with (
             patch("subprocess.run", side_effect=mock_subprocess_run),
-            patch("questionary.select", MockSelect1),
-            patch("questionary.confirm", MockConfirm),
+            patch("questionary.select", make_select_mock("FastAPI", "uv")),
+            patch("questionary.confirm", mock_questionary_responses["confirm"]),
+            patch("questionary.checkbox", mock_questionary_responses["checkbox"]),
         ):
             result1 = cli_runner.invoke(app, ["setup", str(project1)])
             assert result1.exit_code == 0
@@ -434,14 +428,11 @@ class TestCompleteSetupFlow:
         project2 = tmp_path / "project2"
         project2.mkdir()
 
-        class MockSelect2:
-            def ask(self):
-                return "Django"
-
         with (
             patch("subprocess.run", side_effect=mock_subprocess_run),
-            patch("questionary.select", MockSelect2),
-            patch("questionary.confirm", MockConfirm),
+            patch("questionary.select", make_select_mock("Django", "pip")),
+            patch("questionary.confirm", mock_questionary_responses["confirm"]),
+            patch("questionary.checkbox", mock_questionary_responses["checkbox"]),
         ):
             result2 = cli_runner.invoke(app, ["setup", str(project2)])
             assert result2.exit_code == 0
@@ -454,9 +445,11 @@ class TestCompleteSetupFlow:
         assert config2["setup_type_slug"] == "django"
 
         # Verify preferences updated with both
-        pref_manager = PreferenceManager()
-        prefs = pref_manager.load_preferences()
+        prefs = PreferenceManager().load_preferences()
         assert len(prefs.setup_history) >= 2
+        history_slugs = [entry.setup_type_slug for entry in prefs.setup_history]
+        assert "fastapi" in history_slugs
+        assert "django" in history_slugs
 
 
 class TestSetupFlowErrorHandling:
@@ -524,34 +517,33 @@ class TestSetupFlowErrorHandling:
 class TestSetupFlowPerformance:
     """Test setup flow performance characteristics."""
 
-    @pytest.mark.skip(
-        reason="Pre-existing E2E flow test with bespoke mocks; rebuilt in 2.1.0 orchestrator phase refactor"
-    )
-    def test_setup_flow_completes_within_timeout(self, tmp_path, cli_runner, mock_subprocess_run):
+    def test_setup_flow_completes_within_timeout(
+        self, tmp_path, cli_runner, mock_subprocess_run, mock_questionary_responses, monkeypatch
+    ):
         """Test that setup completes within reasonable time (mocked, should be fast)."""
         import time
+
+        # Arrange
+        home_dir = tmp_path / "home"
+        home_dir.mkdir()
+        monkeypatch.setenv("HOME", str(home_dir))
 
         project_path = tmp_path / "test-performance"
         project_path.mkdir()
 
-        class MockSelect:
-            def ask(self):
-                return "CLI Tool"  # Smaller dependency set
-
-        class MockConfirm:
-            def ask(self):
-                return True
-
+        # Act: CLI Tool has a smaller dependency set
         with (
             patch("subprocess.run", side_effect=mock_subprocess_run),
-            patch("questionary.select", MockSelect),
-            patch("questionary.confirm", MockConfirm),
-            patch("questionary.checkbox", create_mock_checkbox()),
+            patch("questionary.select", make_select_mock("CLI Tool")),
+            patch("questionary.confirm", mock_questionary_responses["confirm"]),
+            patch("questionary.checkbox", mock_questionary_responses["checkbox"]),
         ):
             start_time = time.time()
             result = cli_runner.invoke(app, ["setup", str(project_path)])
             elapsed_time = time.time() - start_time
 
-            assert result.exit_code == 0
-            # With mocking, should complete quickly (< 5 seconds)
-            assert elapsed_time < 5.0, f"Setup took {elapsed_time:.2f}s (too slow)"
+        # Assert
+        assert result.exit_code == 0
+        assert (project_path / ".typysetup" / "config.json").exists()
+        # With mocking, should complete quickly (< 5 seconds)
+        assert elapsed_time < 5.0, f"Setup took {elapsed_time:.2f}s (too slow)"

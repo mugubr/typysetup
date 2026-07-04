@@ -132,7 +132,7 @@ class PromptManager:
                 }
             )
 
-        selected = questionary.checkbox(
+        selected: list[str] | None = questionary.checkbox(
             "Select extensions to install (all are optional):",
             choices=choices,
         ).ask()
@@ -151,7 +151,7 @@ class PromptManager:
         console.print("\n[bold blue]Project Information[/bold blue]\n")
 
         for attempt in range(self.max_retries):
-            project_name = questionary.text(
+            project_name: str | None = questionary.text(
                 "Project name (must be valid Python package name):",
                 default="my_project",
                 validate=lambda x: self._validate_package_name(x),
@@ -216,7 +216,7 @@ class PromptManager:
             Author email, or None if skipped/cancelled
         """
         for attempt in range(self.max_retries):
-            email = questionary.text(
+            email: str | None = questionary.text(
                 "Author email (optional, press Enter to skip):",
                 default="",
                 validate=self._validate_email_optional,

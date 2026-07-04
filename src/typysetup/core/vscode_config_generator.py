@@ -126,7 +126,8 @@ class VSCodeConfigGenerator:
 
         try:
             with open(settings_path, encoding="utf-8") as f:
-                return json.load(f)
+                settings: dict[str, Any] = json.load(f)
+                return settings
         except (OSError, json.JSONDecodeError) as e:
             console.print(f"[yellow]Warning: Could not read existing settings.json: {e}[/yellow]")
             return None
@@ -148,7 +149,8 @@ class VSCodeConfigGenerator:
         try:
             with open(extensions_path, encoding="utf-8") as f:
                 data = json.load(f)
-                return data.get("recommendations", [])
+                recommendations: list[str] = data.get("recommendations", [])
+                return recommendations
         except (OSError, json.JSONDecodeError) as e:
             console.print(f"[yellow]Warning: Could not read existing extensions.json: {e}[/yellow]")
             return None
@@ -169,7 +171,8 @@ class VSCodeConfigGenerator:
 
         try:
             with open(launch_path, encoding="utf-8") as f:
-                return json.load(f)
+                launch_config: dict[str, Any] = json.load(f)
+                return launch_config
         except (OSError, json.JSONDecodeError) as e:
             console.print(f"[yellow]Warning: Could not read existing launch.json: {e}[/yellow]")
             return None

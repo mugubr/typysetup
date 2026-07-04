@@ -297,5 +297,5 @@ class SetupTypeBuilder:
         Returns:
             Self for chaining
         """
-        self.__init__()  # Reset all fields
+        SetupTypeBuilder.__init__(self)  # Reset all fields
         return self

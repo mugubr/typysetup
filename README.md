@@ -135,7 +135,7 @@ Machine learning and AI model development
 
 ## Technology Stack
 
-- **Language**: Python 3.10+
+- **Language**: Python 3.11+
 - **CLI Framework**: Typer (type-safe, beautiful)
 - **Data Validation**: Pydantic (runtime validation)
 - **Configuration**: YAML + PyYAML (human-friendly)

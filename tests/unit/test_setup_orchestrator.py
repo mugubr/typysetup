@@ -61,8 +61,8 @@ def test_orchestrator_initialization_default_loader():
 
 
 @patch("typysetup.commands.setup_orchestrator.ensure_project_directory")
-@patch("typysetup.commands.setup_orchestrator.questionary.select")
-@patch("typysetup.commands.setup_orchestrator.questionary.confirm")
+@patch("typysetup.commands.phases.selection_phase.questionary.select")
+@patch("typysetup.commands.phases.selection_phase.questionary.confirm")
 def test_select_setup_type_success(
     mock_confirm, mock_select, mock_ensure, orchestrator, setup_types
 ):
@@ -77,7 +77,7 @@ def test_select_setup_type_success(
     assert orchestrator.setup_type.name == "FastAPI"
 
 
-@patch("typysetup.commands.setup_orchestrator.questionary.select")
+@patch("typysetup.commands.phases.selection_phase.questionary.select")
 def test_select_setup_type_cancelled(mock_select, orchestrator):
     """Test setup type selection when user cancels."""
     mock_select.return_value.ask.return_value = None
@@ -97,7 +97,7 @@ def test_select_setup_type_no_types_available(orchestrator):
     assert result is False
 
 
-@patch("typysetup.commands.setup_orchestrator.questionary.confirm")
+@patch("typysetup.commands.phases.selection_phase.questionary.confirm")
 def test_select_python_version_default(mock_confirm, orchestrator, setup_types):
     """Test selecting default Python version."""
     orchestrator.setup_type = setup_types[0]
@@ -108,8 +108,8 @@ def test_select_python_version_default(mock_confirm, orchestrator, setup_types):
     assert version == "3.10+"
 
 
-@patch("typysetup.commands.setup_orchestrator.questionary.confirm")
-@patch("typysetup.commands.setup_orchestrator.questionary.text")
+@patch("typysetup.commands.phases.selection_phase.questionary.confirm")
+@patch("typysetup.commands.phases.selection_phase.questionary.text")
 def test_select_python_version_custom(mock_text, mock_confirm, orchestrator, setup_types):
     """Test selecting custom Python version."""
     orchestrator.setup_type = setup_types[0]
@@ -121,7 +121,7 @@ def test_select_python_version_custom(mock_text, mock_confirm, orchestrator, set
     assert version == "3.9"
 
 
-@patch("typysetup.commands.setup_orchestrator.questionary.select")
+@patch("typysetup.commands.phases.selection_phase.questionary.select")
 def test_select_package_manager_multiple(mock_select, orchestrator, setup_types):
     """Test selecting from multiple package managers."""
     orchestrator.setup_type = setup_types[0]
@@ -155,7 +155,7 @@ def test_select_package_manager_none_setup_type(orchestrator):
     assert manager == "pip"
 
 
-@patch("typysetup.commands.setup_orchestrator.questionary.confirm")
+@patch("typysetup.commands.phases.selection_phase.questionary.confirm")
 def test_confirm_setup_success(mock_confirm, orchestrator, setup_types):
     """Test confirming setup configuration."""
     orchestrator.setup_type = setup_types[0]
@@ -167,7 +167,7 @@ def test_confirm_setup_success(mock_confirm, orchestrator, setup_types):
     assert result is True
 
 
-@patch("typysetup.commands.setup_orchestrator.questionary.confirm")
+@patch("typysetup.commands.phases.selection_phase.questionary.confirm")
 def test_confirm_setup_cancelled(mock_confirm, orchestrator, setup_types):
     """Test cancelling setup confirmation."""
     orchestrator.setup_type = setup_types[0]
@@ -185,69 +185,54 @@ def test_display_setup_types(orchestrator, setup_types):
     orchestrator._display_setup_types(setup_types)
 
 
-@patch("typysetup.commands.setup_orchestrator.ensure_project_directory")
-@patch.object(SetupOrchestrator, "_select_setup_type")
-@patch.object(SetupOrchestrator, "_select_python_version")
-@patch.object(SetupOrchestrator, "_select_package_manager")
-@patch.object(SetupOrchestrator, "_confirm_setup")
-@patch.object(SetupOrchestrator, "_select_dependency_groups")
-@patch.object(SetupOrchestrator, "_select_vscode_extensions")
-@patch.object(SetupOrchestrator, "_collect_project_metadata")
-@patch.object(SetupOrchestrator, "_confirm_all_selections")
-@patch.object(SetupOrchestrator, "_generate_vscode_config")
-@patch.object(SetupOrchestrator, "_create_virtual_environment")
-@patch.object(SetupOrchestrator, "_generate_pyproject_toml")
-@patch.object(SetupOrchestrator, "_install_dependencies")
-@pytest.mark.skip(
-    reason="Pre-existing orchestrator test (hardcoded /tmp path, private-method mocking); rebuilt in 2.1.0 phase refactor"
-)
-def test_run_setup_wizard_success(
-    mock_install_deps,
-    mock_pyproject,
-    mock_create_venv,
-    mock_vscode_config,
-    mock_confirm_all,
-    mock_metadata,
-    mock_extensions,
-    mock_deps,
-    mock_confirm,
-    mock_manager,
-    mock_version,
-    mock_type,
-    mock_ensure,
-    orchestrator,
-    setup_types,
-):
-    """Test running complete setup wizard successfully."""
-    from pathlib import Path
-
+def test_run_setup_wizard_success(orchestrator, setup_types, tmp_path):
+    """Wizard happy path: every phase succeeds and a config is returned."""
     from typysetup.models import DependencySelection, ProjectMetadata
 
-    mock_ensure.return_value = Path("/tmp/test_project")
-    mock_type.return_value = True
-    mock_version.return_value = "3.10"
-    mock_manager.return_value = "pip"
-    mock_confirm.return_value = True
-    mock_deps.return_value = DependencySelection(
+    # Arrange: successful selection phase
+    selection = MagicMock()
+    selection.select_setup_type.return_value = setup_types[0]
+    selection.select_python_version.return_value = "3.11"
+    selection.select_package_manager.return_value = "pip"
+    selection.confirm_setup.return_value = True
+    selection.select_dependency_groups.return_value = DependencySelection(
         setup_type_slug="fastapi",
         selected_groups={"core": True},
         all_packages=["fastapi>=0.104"],
     )
-    mock_extensions.return_value = []
-    mock_metadata.return_value = ProjectMetadata(project_name="test_project")
-    mock_confirm_all.return_value = True
-    mock_vscode_config.return_value = True
-    mock_create_venv.return_value = True
-    mock_pyproject.return_value = True
-    mock_install_deps.return_value = True
-    orchestrator.setup_type = setup_types[0]
+    selection.select_vscode_extensions.return_value = []
+    selection.collect_project_metadata.return_value = ProjectMetadata(project_name="test_project")
+    selection.confirm_all_selections.return_value = True
+    selection.prompt_continue.return_value = True
+    orchestrator.selection_phase = selection
 
-    result = orchestrator.run_setup_wizard("/tmp/test_project")
+    # Arrange: successful scaffold/environment phases, quiet summary
+    scaffold = MagicMock()
+    scaffold.generate_gitignore.return_value = True
+    scaffold.generate_vscode_config.return_value = True
+    scaffold.generate_pyproject_toml.return_value = True
+    orchestrator.scaffold_phase = scaffold
 
+    environment = MagicMock()
+    environment.create_virtual_environment.return_value = True
+    environment.install_dependencies.return_value = True
+    orchestrator.environment_phase = environment
+
+    orchestrator.summary_phase = MagicMock()
+    orchestrator.preference_manager = MagicMock()
+    orchestrator.project_config_manager = MagicMock()
+
+    # Act
+    result = orchestrator.run_setup_wizard(str(tmp_path))
+
+    # Assert
     assert result is not None
-    assert result.project_path == "/tmp/test_project"
+    assert result.project_path == str(tmp_path)
     assert result.setup_type_slug == "fastapi"
-    assert result.python_version == "3.10"
+    assert result.python_version == "3.11"
+    assert result.status == "success"
+    orchestrator.project_config_manager.save_config.assert_called_once()
+    orchestrator.summary_phase.display_setup_summary.assert_called_once()
     assert result.package_manager == "pip"
 
 

@@ -26,7 +26,7 @@ The workflow already declares the matching `environment:` blocks and
 ## Cutting a release
 
 1. Make sure `master` is green (the **CI** workflow runs ruff, black, mypy, and
-   pytest on Python 3.10–3.13).
+   pytest on Python 3.11–3.13).
 2. Bump the version in **both** places (they must stay in sync):
    - `src/typysetup/__init__.py` → `__version__`
    - `pyproject.toml` → `version`
@@ -53,7 +53,7 @@ The workflow already declares the matching `environment:` blocks and
 
 Pushing a `vX.Y.Z` tag triggers `publish-to-pypi.yml`, which:
 
-1. runs the test gate (Python 3.10 and 3.13),
+1. runs the test gate (Python 3.11 and 3.13),
 2. builds the sdist + wheel and runs `twine check`,
 3. publishes to **TestPyPI**, then **PyPI** (both via OIDC),
 4. creates a **GitHub Release** with auto-generated notes and the built

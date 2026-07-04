@@ -89,11 +89,13 @@ class DependencyInstaller:
                     # Try to get versions from pip show
                     for package_spec in packages:
                         package_name = self._extract_package_name(package_spec)
-                        version = self._get_installed_version(package_name, python_executable)
-                        if version:
+                        installed_version = self._get_installed_version(
+                            package_name, python_executable
+                        )
+                        if installed_version:
                             project_config.add_dependency(
                                 name=package_name,
-                                version=version,
+                                version=installed_version,
                                 manager=package_manager,
                             )
 

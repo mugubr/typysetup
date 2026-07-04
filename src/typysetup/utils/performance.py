@@ -131,7 +131,7 @@ def measure_time(operation: str, verbose: bool = False):
         ...     create_venv()
         >>> print(f"Duration: {timing['duration']:.2f}s")
     """
-    timing = {"duration": 0.0, "success": True}
+    timing: dict[str, Any] = {"duration": 0.0, "success": True}
     start_time = time.time()
 
     try:
@@ -271,7 +271,7 @@ def estimate_time(operation: str, count: int, avg_time_per_item: float) -> float
     metrics = _global_timer.metrics.get(operation)
     if metrics and metrics["count"] > 0:
         # Use historical average if available
-        return metrics["avg_duration"] * count
+        return float(metrics["avg_duration"]) * count
 
     # Use provided estimate
     return count * avg_time_per_item

@@ -1,12 +1,12 @@
 """Version constraint model for validating Python and package versions."""
 
 import re
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
-class ConstraintType(str, Enum):
+class ConstraintType(StrEnum):
     """Types of version constraints."""
 
     MINIMUM = "minimum"  # >= X.Y (e.g., "3.10+")

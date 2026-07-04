@@ -123,11 +123,8 @@ class TestDependencyInstallationIntegration:
 
         assert result.exists()
 
-        # Verify content (tomllib is stdlib on 3.11+, tomli on 3.10)
-        try:
-            import tomllib
-        except ModuleNotFoundError:
-            import tomli as tomllib
+        # Verify content
+        import tomllib
 
         with open(result, "rb") as f:
             config = tomllib.load(f)

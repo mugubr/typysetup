@@ -70,9 +70,9 @@ pip install -e .
 1. **Python não instalado ou versão incompatível**
    ```bash
    # Verificar versão do Python
-   python --version  # Deve ser 3.10+
+   python --version  # Deve ser 3.11+
 
-   # Instalar Python 3.10+ se necessário
+   # Instalar Python 3.11+ se necessário
    # Ubuntu/Debian
    sudo apt install python3.11
 

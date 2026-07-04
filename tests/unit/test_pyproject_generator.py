@@ -1,6 +1,6 @@
 """Unit tests for PyProjectGenerator."""
 
-import sys
+import tomllib
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -9,15 +9,6 @@ import tomli_w
 
 from typysetup.core.pyproject_generator import PyprojectGenerator
 from typysetup.models import ProjectMetadata
-
-# Use tomllib for Python 3.11+, tomli for earlier versions
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    try:
-        import tomli as tomllib
-    except ImportError:
-        tomllib = None
 
 
 @pytest.fixture
@@ -152,8 +143,6 @@ class TestGeneratePyprojectToml:
         assert pyproject_path.exists()
 
         # Verify the content
-        if tomllib is None:
-            pytest.skip("tomli not available")
         with open(pyproject_path, "rb") as f:
             config = tomllib.load(f)
 
@@ -210,8 +199,6 @@ class TestGeneratePyprojectToml:
         assert len(backup_files) == 1, "Expected exactly one backup file"
 
         # Verify backup contains old content
-        if tomllib is None:
-            pytest.skip("tomli not available")
         with open(backup_files[0], "rb") as f:
             backup_config = tomllib.load(f)
         assert backup_config["project"]["name"] == "old_project"
@@ -237,8 +224,6 @@ class TestGeneratePyprojectToml:
         assert result.exists()
 
         # Verify all dependencies are included
-        if tomllib is None:
-            pytest.skip("tomli not available")
         with open(result, "rb") as f:
             config = tomllib.load(f)
 
@@ -264,8 +249,6 @@ class TestGeneratePyprojectToml:
             assert result.exists()
 
             # Verify version is correct
-            if tomllib is None:
-                pytest.skip("tomli not available")
             with open(result, "rb") as f:
                 config = tomllib.load(f)
 
@@ -312,8 +295,6 @@ class TestGeneratePyprojectValidation:
         )
 
         # Should be readable as TOML without errors
-        if tomllib is None:
-            pytest.skip("tomli not available")
         with open(result, "rb") as f:
             config = tomllib.load(f)
 
@@ -331,8 +312,6 @@ class TestGeneratePyprojectValidation:
             python_version="3.10+",
         )
 
-        if tomllib is None:
-            pytest.skip("tomli not available")
         with open(result, "rb") as f:
             config = tomllib.load(f)
 
@@ -350,8 +329,6 @@ class TestGeneratePyprojectValidation:
             python_version="3.10+",
         )
 
-        if tomllib is None:
-            pytest.skip("tomli not available")
         with open(result, "rb") as f:
             config = tomllib.load(f)
 

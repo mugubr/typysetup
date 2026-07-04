@@ -1,6 +1,6 @@
 """Datetime helpers for TyPySetup."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 
 def utc_now() -> datetime:
@@ -11,4 +11,4 @@ def utc_now() -> datetime:
     on-disk serialization format (ISO 8601 + ``Z`` suffix) is preserved and no
     offset-aware/naive comparison issues are introduced across stored history.
     """
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return datetime.now(UTC).replace(tzinfo=None)

@@ -141,30 +141,30 @@ def ensure_project_directory(project_path: str) -> Path:
     Raises:
         RuntimeError: If directory cannot be created or doesn't have write permissions
     """
-    project_path = Path(project_path).expanduser().resolve()
+    resolved_path = Path(project_path).expanduser().resolve()
 
     try:
-        project_path.mkdir(parents=True, exist_ok=True)
-        logger.debug(f"Project directory ensured: {project_path}")
+        resolved_path.mkdir(parents=True, exist_ok=True)
+        logger.debug(f"Project directory ensured: {resolved_path}")
     except PermissionError as e:
-        raise RuntimeError(f"Permission denied: cannot write to {project_path}") from e
+        raise RuntimeError(f"Permission denied: cannot write to {resolved_path}") from e
     except Exception as e:
-        raise RuntimeError(f"Failed to create project directory {project_path}: {e}") from e
+        raise RuntimeError(f"Failed to create project directory {resolved_path}: {e}") from e
 
     # Check write permissions
-    if not project_path.is_dir():
-        raise RuntimeError(f"Project path exists but is not a directory: {project_path}")
+    if not resolved_path.is_dir():
+        raise RuntimeError(f"Project path exists but is not a directory: {resolved_path}")
 
     try:
-        test_file = project_path / ".typysetup_write_test"
+        test_file = resolved_path / ".typysetup_write_test"
         test_file.touch()
         test_file.unlink()
     except PermissionError as e:
-        raise RuntimeError(f"No write permissions in {project_path}") from e
+        raise RuntimeError(f"No write permissions in {resolved_path}") from e
     except Exception as e:
         logger.warning(f"Could not test write permissions: {e}")
 
-    return project_path
+    return resolved_path
 
 
 def get_vscode_settings_path(project_path: Path) -> Path:

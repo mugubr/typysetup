@@ -6,7 +6,55 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from typysetup.commands.setup_orchestrator import SetupOrchestrator
-from typysetup.models import SetupType
+from typysetup.models import DependencySelection, ProjectMetadata, SetupType
+
+
+def install_happy_path_phase_mocks(orchestrator):
+    """Replace orchestrator phases and managers with happy-path mocks.
+
+    Returns:
+        Tuple of (selection, scaffold, environment) phase mocks so tests can
+        override individual steps to simulate cancellation or failure.
+    """
+    selection = MagicMock()
+    selection.select_setup_type.return_value = SetupType(
+        name="Test",
+        slug="test",
+        description="Test setup type for wizard tests",
+        python_version="3.11",
+        supported_managers=["pip"],
+        dependencies={"core": ["fastapi>=0.104"]},
+    )
+    selection.select_python_version.return_value = "3.11"
+    selection.select_package_manager.return_value = "pip"
+    selection.confirm_setup.return_value = True
+    selection.select_dependency_groups.return_value = DependencySelection(
+        setup_type_slug="test",
+        selected_groups={"core": True},
+        all_packages=["fastapi>=0.104"],
+    )
+    selection.select_vscode_extensions.return_value = []
+    selection.collect_project_metadata.return_value = ProjectMetadata(project_name="test_project")
+    selection.confirm_all_selections.return_value = True
+    selection.prompt_continue.return_value = True
+    orchestrator.selection_phase = selection
+
+    scaffold = MagicMock()
+    scaffold.generate_gitignore.return_value = True
+    scaffold.generate_vscode_config.return_value = True
+    scaffold.generate_pyproject_toml.return_value = True
+    orchestrator.scaffold_phase = scaffold
+
+    environment = MagicMock()
+    environment.create_virtual_environment.return_value = True
+    environment.install_dependencies.return_value = True
+    orchestrator.environment_phase = environment
+
+    orchestrator.summary_phase = MagicMock()
+    orchestrator.preference_manager = MagicMock()
+    orchestrator.project_config_manager = MagicMock()
+
+    return selection, scaffold, environment
 
 
 class TestSignalHandling:
@@ -95,53 +143,21 @@ class TestCancellationPrompts:
             result = orchestrator._prompt_continue("Continue?")
             assert result is False
 
-    @patch("questionary.confirm")
-    @pytest.mark.skip(
-        reason="Pre-existing orchestrator test (hardcoded paths/mocks); rebuilt in 2.1.0 phase refactor"
-    )
-    def test_cancellation_after_venv_creation(self, mock_confirm, orchestrator, tmp_path):
+    def test_cancellation_after_venv_creation(self, orchestrator, tmp_path):
         """Test cancellation prompt after venv creation."""
-        # Setup mocks
-        orchestrator.setup_type = SetupType(
-            name="Test",
-            slug="test",
-            description="Test type",
-            python_version="3.11",
-            supported_managers=["pip"],
-            dependencies={},
-            vscode_settings={},
-        )
-        orchestrator.project_path = tmp_path
+        # Arrange: everything succeeds until the user declines the post-venv prompt
+        selection, scaffold, environment = install_happy_path_phase_mocks(orchestrator)
+        selection.prompt_continue.return_value = False
 
-        with patch.object(orchestrator, "_select_setup_type", return_value=True):
-            with patch.object(orchestrator, "_select_python_version", return_value="3.11"):
-                with patch.object(orchestrator, "_select_package_manager", return_value="pip"):
-                    with patch.object(orchestrator, "_confirm_setup", return_value=True):
-                        with patch.object(orchestrator, "_select_dependency_groups"):
-                            with patch.object(
-                                orchestrator, "_select_vscode_extensions", return_value=[]
-                            ):
-                                with patch.object(orchestrator, "_collect_project_metadata"):
-                                    with patch.object(
-                                        orchestrator, "_confirm_all_selections", return_value=True
-                                    ):
-                                        with patch.object(
-                                            orchestrator,
-                                            "_generate_vscode_config",
-                                            return_value=True,
-                                        ):
-                                            with patch.object(
-                                                orchestrator,
-                                                "_create_virtual_environment",
-                                                return_value=True,
-                                            ):
-                                                # User declines to continue
-                                                mock_confirm.return_value.ask.return_value = False
+        # Act
+        result = orchestrator.run_setup_wizard(str(tmp_path))
 
-                                                result = orchestrator.run_setup_wizard(
-                                                    str(tmp_path)
-                                                )
-                                                assert result is None
+        # Assert: wizard cancelled after venv creation, before the dependency phase
+        assert result is None
+        environment.create_virtual_environment.assert_called_once()
+        scaffold.generate_pyproject_toml.assert_not_called()
+        environment.install_dependencies.assert_not_called()
+        orchestrator.project_config_manager.save_config.assert_not_called()
 
 
 class TestSetupSummary:
@@ -288,40 +304,22 @@ class TestRollbackIntegration:
         # After wizard, rollback should be None
         assert orchestrator.rollback is None
 
-    @pytest.mark.skip(
-        reason="Pre-existing orchestrator test (invalid SetupType data); rebuilt in 2.1.0 phase refactor"
-    )
     def test_rollback_on_exception(self, orchestrator, tmp_path):
         """Test that rollback executes on exception."""
-        orchestrator.setup_type = SetupType(
-            name="Test",
-            slug="test",
-            description="Test",
-            python_version="3.11",
-            supported_managers=["pip"],
-            dependencies={},
-            vscode_settings={},
-        )
+        # Arrange: VSCode config generation blows up inside the rollback context
+        selection, scaffold, environment = install_happy_path_phase_mocks(orchestrator)
+        scaffold.generate_vscode_config.side_effect = Exception("Test error")
 
-        with patch.object(orchestrator, "_select_setup_type", return_value=True):
-            with patch.object(orchestrator, "_select_python_version", return_value="3.11"):
-                with patch.object(orchestrator, "_select_package_manager", return_value="pip"):
-                    with patch.object(orchestrator, "_confirm_setup", return_value=True):
-                        with patch.object(orchestrator, "_select_dependency_groups"):
-                            with patch.object(
-                                orchestrator, "_select_vscode_extensions", return_value=[]
-                            ):
-                                with patch.object(orchestrator, "_collect_project_metadata"):
-                                    with patch.object(
-                                        orchestrator, "_confirm_all_selections", return_value=True
-                                    ):
-                                        with patch.object(
-                                            orchestrator,
-                                            "_generate_vscode_config",
-                                            side_effect=Exception("Test error"),
-                                        ):
-                                            result = orchestrator.run_setup_wizard(str(tmp_path))
-                                            assert result is None
+        # Act
+        result = orchestrator.run_setup_wizard(str(tmp_path))
+
+        # Assert: wizard failed, later phases skipped, failure recorded, rollback cleared
+        assert result is None
+        environment.create_virtual_environment.assert_not_called()
+        orchestrator.preference_manager.add_setup_history.assert_called_once()
+        history_kwargs = orchestrator.preference_manager.add_setup_history.call_args.kwargs
+        assert history_kwargs["success"] is False
+        assert orchestrator.rollback is None
 
 
 class TestProjectConfigPersistence:
