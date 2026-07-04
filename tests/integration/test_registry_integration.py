@@ -91,13 +91,13 @@ class TestPhase3Integration:
         """Test Python version compatibility filtering."""
         registry = SetupTypeRegistry()
 
-        # Test with 3.10 (should find most types)
+        # Test with 3.10 (all templates now require >=3.10)
         types_310 = registry.find_by_python_version("3.10.5")
         assert len(types_310) >= 4
 
-        # Test with 3.8 (should find subset - Django)
+        # Test with 3.8 (EOL — no template supports it anymore)
         types_38 = registry.find_by_python_version("3.8.0")
-        assert len(types_38) >= 1
+        assert len(types_38) == 0
 
     def test_builder_creates_registerable_type(self):
         """Test that SetupTypeBuilder can create types suitable for registry."""

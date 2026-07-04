@@ -20,7 +20,7 @@ class PromptManager:
     - Project metadata collection (name, description, author, email)
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize prompt manager."""
         self.max_retries = 3
 
@@ -160,17 +160,19 @@ class PromptManager:
             if project_name is None:
                 return None
 
-            try:
-                # Use the validator from ProjectMetadata
-                ProjectMetadata.is_valid_package_name(project_name)
+            # Use the validator from ProjectMetadata
+            if ProjectMetadata.is_valid_package_name(project_name):
                 return project_name
-            except ValueError as e:
-                console.print(f"[red]Invalid project name: {e}[/red]")
-                if attempt < self.max_retries - 1:
-                    console.print("[dim]Please try again.[/dim]\n")
-                else:
-                    console.print("[red]Maximum retries exceeded. Setup cancelled.[/red]")
-                    return None
+
+            console.print(
+                f"[red]Invalid project name: {project_name!r} is not a valid "
+                f"Python package name[/red]"
+            )
+            if attempt < self.max_retries - 1:
+                console.print("[dim]Please try again.[/dim]\n")
+            else:
+                console.print("[red]Maximum retries exceeded. Setup cancelled.[/red]")
+                return None
 
         return None
 

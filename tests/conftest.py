@@ -1,9 +1,19 @@
 """Pytest configuration and shared fixtures."""
 
 import json
+import os
 import tempfile
 from collections.abc import Generator
 from pathlib import Path
+
+# Keep console output deterministic regardless of the developer's terminal:
+# Rich honours FORCE_COLOR/COLORTERM/TERM, which would inject ANSI codes into
+# captured output and break string assertions. Must run before any typysetup
+# import creates a module-level Console.
+os.environ.pop("FORCE_COLOR", None)
+os.environ.pop("COLORTERM", None)
+os.environ["NO_COLOR"] = "1"
+os.environ["TERM"] = "dumb"
 
 import pytest
 from typer.testing import CliRunner

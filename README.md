@@ -91,31 +91,31 @@ Web API with FastAPI framework - async, modern, fast
 
 - Python: 3.10+
 - Core: fastapi, uvicorn, pydantic
-- Dev: pytest, black, ruff
+- Dev: pytest, ruff, mypy
 
 ### Django
 
 Full-stack web framework with batteries included
 
-- Python: 3.8+
+- Python: 3.10+
 - Core: django, djangorestframework
-- Dev: pytest, black, ruff
+- Dev: pytest, ruff, mypy
 
 ### Data Science
 
 Jupyter-based data analysis and ML workflows
 
-- Python: 3.9+
+- Python: 3.10+
 - Core: pandas, numpy, jupyter, scikit-learn
-- Dev: pytest, black, ruff
+- Dev: pytest, ruff, mypy
 
 ### CLI Tool
 
 Command-line applications using Typer/Click
 
-- Python: 3.8+
+- Python: 3.10+
 - Core: typer, click, rich
-- Dev: pytest, black, ruff
+- Dev: pytest, ruff, mypy
 
 ### Async/Real-time
 
@@ -123,15 +123,15 @@ High-performance async and real-time applications
 
 - Python: 3.10+
 - Core: asyncio, aiohttp, websockets, starlette
-- Dev: pytest, black, ruff
+- Dev: pytest, ruff, mypy
 
 ### ML/AI
 
 Machine learning and AI model development
 
-- Python: 3.9+
+- Python: 3.10+
 - Core: tensorflow, torch, transformers, scikit-learn
-- Dev: pytest, black, ruff
+- Dev: pytest, ruff, mypy
 
 ## Technology Stack
 
@@ -143,7 +143,7 @@ Machine learning and AI model development
 - **Virtual Environment**: Built-in venv module
 - **Package Managers**: uv (primary), pip, poetry
 - **Testing**: pytest + pytest-cov
-- **Code Quality**: black, ruff, mypy
+- **Code Quality**: ruff (lint + format), mypy
 
 ## Development
 
@@ -168,7 +168,7 @@ pytest --cov=src/typysetup
 
 ```bash
 # Format code
-black src/ tests/
+ruff format src/ tests/
 
 # Lint code
 ruff check src/ tests/

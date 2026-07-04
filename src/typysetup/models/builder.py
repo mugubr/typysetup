@@ -24,7 +24,7 @@ class SetupTypeBuilder:
             .build())
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize builder with empty configuration."""
         self._name: str | None = None
         self._slug: str | None = None

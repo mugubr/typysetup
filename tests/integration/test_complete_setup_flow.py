@@ -314,7 +314,7 @@ class TestCompleteSetupFlow:
         existing_settings = {
             "editor.fontSize": 14,
             "workbench.colorTheme": "Monokai",
-            "python.linting.enabled": False,  # Will be overridden
+            "editor.formatOnSave": False,  # Will be overridden by the template
         }
         (vscode_dir / "settings.json").write_text(json.dumps(existing_settings, indent=2))
 
@@ -338,7 +338,8 @@ class TestCompleteSetupFlow:
         assert merged_settings["workbench.colorTheme"] == "Monokai"
 
         # Setup settings applied (override)
-        assert merged_settings["python.linting.enabled"] is True
+        assert merged_settings["editor.formatOnSave"] is True
+        assert merged_settings["[python]"]["editor.defaultFormatter"] == "charliermarsh.ruff"
         assert "python.defaultInterpreterPath" in merged_settings
 
     def test_setup_flow_updates_user_preferences(

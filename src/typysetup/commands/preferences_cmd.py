@@ -5,6 +5,7 @@ from rich.console import Console
 from rich.table import Table
 
 from typysetup.core import PreferenceManager
+from typysetup.models import UserPreference
 
 
 class PreferencesCommand:
@@ -56,7 +57,7 @@ class PreferencesCommand:
             self.console.print(f"[red]Error loading preferences: {e}[/red]")
             raise typer.Exit(code=1) from e
 
-    def _display_main_preferences_table(self, prefs) -> None:
+    def _display_main_preferences_table(self, prefs: UserPreference) -> None:
         """Display main preferences in a table.
 
         Args:
@@ -76,7 +77,7 @@ class PreferencesCommand:
         self.console.print(table)
         self.console.print()
 
-    def _display_preferred_setup_types(self, prefs) -> None:
+    def _display_preferred_setup_types(self, prefs: UserPreference) -> None:
         """Display preferred setup types list.
 
         Args:
@@ -88,7 +89,7 @@ class PreferencesCommand:
                 self.console.print(f"  {i}. {setup_type}")
             self.console.print()
 
-    def _display_setup_history(self, prefs) -> None:
+    def _display_setup_history(self, prefs: UserPreference) -> None:
         """Display setup history table.
 
         Args:
