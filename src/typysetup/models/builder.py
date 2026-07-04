@@ -1,6 +1,6 @@
 """SetupTypeBuilder for fluent construction of SetupType instances."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from typysetup.models.setup_type import SetupType
 
@@ -26,17 +26,17 @@ class SetupTypeBuilder:
 
     def __init__(self):
         """Initialize builder with empty configuration."""
-        self._name: Optional[str] = None
-        self._slug: Optional[str] = None
-        self._description: Optional[str] = None
-        self._python_version: Optional[str] = None
-        self._supported_managers: List[str] = []
-        self._dependencies: Dict[str, List[str]] = {}
-        self._vscode_settings: Dict[str, Any] = {}
-        self._vscode_extensions: List[str] = []
-        self._vscode_launch_config: Dict[str, Any] = {}
-        self._tags: List[str] = []
-        self._docs_url: Optional[str] = None
+        self._name: str | None = None
+        self._slug: str | None = None
+        self._description: str | None = None
+        self._python_version: str | None = None
+        self._supported_managers: list[str] = []
+        self._dependencies: dict[str, list[str]] = {}
+        self._vscode_settings: dict[str, Any] = {}
+        self._vscode_extensions: list[str] = []
+        self._vscode_launch_config: dict[str, Any] = {}
+        self._tags: list[str] = []
+        self._docs_url: str | None = None
 
     def with_name(self, name: str) -> "SetupTypeBuilder":
         """Set the display name.
@@ -86,7 +86,7 @@ class SetupTypeBuilder:
         self._python_version = python_version
         return self
 
-    def with_supported_managers(self, managers: List[str]) -> "SetupTypeBuilder":
+    def with_supported_managers(self, managers: list[str]) -> "SetupTypeBuilder":
         """Set supported package managers.
 
         Args:
@@ -113,7 +113,7 @@ class SetupTypeBuilder:
         self._dependencies[group].append(package)
         return self
 
-    def add_dependencies(self, group: str, packages: List[str]) -> "SetupTypeBuilder":
+    def add_dependencies(self, group: str, packages: list[str]) -> "SetupTypeBuilder":
         """Add multiple dependencies to a group.
 
         Args:
@@ -141,7 +141,7 @@ class SetupTypeBuilder:
         self._vscode_settings[key] = value
         return self
 
-    def add_vscode_settings(self, settings: Dict[str, Any]) -> "SetupTypeBuilder":
+    def add_vscode_settings(self, settings: dict[str, Any]) -> "SetupTypeBuilder":
         """Add multiple VSCode settings.
 
         Args:
@@ -166,7 +166,7 @@ class SetupTypeBuilder:
             self._vscode_extensions.append(extension_id)
         return self
 
-    def add_vscode_extensions(self, extension_ids: List[str]) -> "SetupTypeBuilder":
+    def add_vscode_extensions(self, extension_ids: list[str]) -> "SetupTypeBuilder":
         """Add multiple VSCode extension recommendations.
 
         Args:
@@ -179,7 +179,7 @@ class SetupTypeBuilder:
             self.add_vscode_extension(ext_id)
         return self
 
-    def with_vscode_settings(self, settings: Dict[str, Any]) -> "SetupTypeBuilder":
+    def with_vscode_settings(self, settings: dict[str, Any]) -> "SetupTypeBuilder":
         """Set VSCode settings (replaces existing).
 
         Args:
@@ -191,7 +191,7 @@ class SetupTypeBuilder:
         self._vscode_settings = settings.copy()
         return self
 
-    def with_vscode_launch_config(self, launch_config: Dict[str, Any]) -> "SetupTypeBuilder":
+    def with_vscode_launch_config(self, launch_config: dict[str, Any]) -> "SetupTypeBuilder":
         """Set VSCode launch configuration.
 
         Args:
@@ -203,7 +203,7 @@ class SetupTypeBuilder:
         self._vscode_launch_config = launch_config
         return self
 
-    def set_vscode_launch_config(self, config: Dict[str, Any]) -> "SetupTypeBuilder":
+    def set_vscode_launch_config(self, config: dict[str, Any]) -> "SetupTypeBuilder":
         """Set VSCode debug launch configuration.
 
         Args:
@@ -228,7 +228,7 @@ class SetupTypeBuilder:
             self._tags.append(tag)
         return self
 
-    def add_tags(self, tags: List[str]) -> "SetupTypeBuilder":
+    def add_tags(self, tags: list[str]) -> "SetupTypeBuilder":
         """Add multiple tags.
 
         Args:
@@ -297,5 +297,5 @@ class SetupTypeBuilder:
         Returns:
             Self for chaining
         """
-        self.__init__()  # Reset all fields
+        SetupTypeBuilder.__init__(self)  # Reset all fields
         return self

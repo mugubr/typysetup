@@ -1,7 +1,5 @@
 """Help command - show detailed help and usage examples."""
 
-from typing import Optional
-
 from rich.console import Console
 
 
@@ -16,7 +14,7 @@ class HelpCommand:
         """Initialize the help command handler."""
         self.console = Console()
 
-    def execute(self, topic: Optional[str]) -> None:
+    def execute(self, topic: str | None) -> None:
         """Execute the help command.
 
         Args:

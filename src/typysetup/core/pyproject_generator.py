@@ -2,7 +2,7 @@
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import tomli_w
 
@@ -29,7 +29,7 @@ class PyprojectGenerator:
         self,
         project_path: Path,
         metadata: ProjectMetadata,
-        dependencies: List[str],
+        dependencies: list[str],
         python_version: str,
     ) -> Path:
         """Generate pyproject.toml in the project directory.
@@ -55,7 +55,7 @@ class PyprojectGenerator:
             config = self._build_config(metadata, dependencies, python_version)
 
             # Backup existing file if it exists
-            backup_path: Optional[Path] = None
+            backup_path: Path | None = None
             if pyproject_path.exists():
                 logger.info(f"Backing up existing pyproject.toml at {pyproject_path}")
                 backup_path = self.file_backup_manager.create_backup(pyproject_path)
@@ -85,8 +85,8 @@ class PyprojectGenerator:
             raise
 
     def _build_config(
-        self, metadata: ProjectMetadata, dependencies: List[str], python_version: str
-    ) -> Dict[str, Any]:
+        self, metadata: ProjectMetadata, dependencies: list[str], python_version: str
+    ) -> dict[str, Any]:
         """Build the complete pyproject.toml configuration dictionary.
 
         Args:
@@ -101,7 +101,7 @@ class PyprojectGenerator:
         min_version = python_version.rstrip("+")
 
         # Build [project] section
-        project_section = {
+        project_section: dict[str, Any] = {
             "name": metadata.project_name,
             "version": "0.1.0",
             "description": metadata.project_description or "",

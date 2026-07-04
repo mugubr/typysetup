@@ -1,7 +1,8 @@
 """Rollback context manager for atomic operations with automatic cleanup on failure."""
 
 import logging
-from typing import TYPE_CHECKING, Callable, List, Tuple
+from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 from rich.console import Console
 
@@ -33,7 +34,7 @@ class RollbackContext:
 
     def __init__(self) -> None:
         """Initialize rollback context with empty cleanup stack."""
-        self.cleanup_actions: List[Tuple[Callable[[], None], str]] = []
+        self.cleanup_actions: list[tuple[Callable[[], None], str]] = []
 
     def __enter__(self) -> "RollbackContext":
         """Enter context manager.

@@ -12,6 +12,48 @@ from typysetup.models.user_preference import SetupHistoryEntry, UserPreference
 runner = CliRunner()
 
 
+@pytest.fixture
+def preferences_with_history(tmp_path, monkeypatch):
+    """Create preferences file with history (module-scoped for reuse across classes)."""
+    config_dir = tmp_path / ".typysetup"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    prefs_file = config_dir / "preferences.json"
+
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path))
+
+    prefs = UserPreference()
+    prefs.add_to_history(
+        SetupHistoryEntry(
+            timestamp=datetime(2024, 1, 15, 10, 30),
+            setup_type_slug="fastapi",
+            project_path="/home/user/projects/api",
+            project_name="my-api",
+            python_version="3.11",
+            package_manager="uv",
+            success=True,
+            duration_seconds=25.5,
+        )
+    )
+    prefs.add_to_history(
+        SetupHistoryEntry(
+            timestamp=datetime(2024, 1, 16, 14, 20),
+            setup_type_slug="flask",
+            project_path="/home/user/projects/web",
+            project_name="my-web-app",
+            python_version="3.10",
+            package_manager="pip",
+            success=False,
+            duration_seconds=15.2,
+        )
+    )
+
+    with open(prefs_file, "w") as f:
+        json.dump(prefs.model_dump(mode="json"), f)
+
+    return prefs_file
+
+
 class TestConfigCommand:
     """Test config command."""
 
@@ -137,51 +179,6 @@ class TestConfigCommand:
 class TestHistoryCommand:
     """Test history command."""
 
-    @pytest.fixture
-    def preferences_with_history(self, tmp_path, monkeypatch):
-        """Create preferences file with history."""
-        # Setup preferences directory
-        config_dir = tmp_path / ".config" / "typysetup"
-        config_dir.mkdir(parents=True, exist_ok=True)
-        prefs_file = config_dir / "preferences.json"
-
-        # Monkeypatch the preferences path
-        monkeypatch.setenv("HOME", str(tmp_path))
-        monkeypatch.setenv("USERPROFILE", str(tmp_path))
-
-        # Create preferences with history
-        prefs = UserPreference()
-        prefs.add_to_history(
-            SetupHistoryEntry(
-                timestamp=datetime(2024, 1, 15, 10, 30),
-                setup_type_slug="fastapi",
-                project_path="/home/user/projects/api",
-                project_name="my-api",
-                python_version="3.11",
-                package_manager="uv",
-                success=True,
-                duration_seconds=25.5,
-            )
-        )
-        prefs.add_to_history(
-            SetupHistoryEntry(
-                timestamp=datetime(2024, 1, 16, 14, 20),
-                setup_type_slug="flask",
-                project_path="/home/user/projects/web",
-                project_name="my-web-app",
-                python_version="3.10",
-                package_manager="pip",
-                success=False,
-                duration_seconds=15.2,
-            )
-        )
-
-        # Save to file
-        with open(prefs_file, "w") as f:
-            json.dump(prefs.model_dump(mode="json"), f)
-
-        return prefs_file
-
     def test_history_with_entries(self, preferences_with_history):
         """Test history command with existing entries."""
         result = runner.invoke(app, ["history"])
@@ -202,7 +199,7 @@ class TestHistoryCommand:
 
     def test_history_verbose(self, preferences_with_history):
         """Test history command with verbose flag."""
-        result = runner.invoke(app, ["history", "--verbose"])
+        result = runner.invoke(app, ["history", "--verbose"], env={"COLUMNS": "200"})
 
         assert result.exit_code == 0
         assert "Python" in result.stdout or "3.11" in result.stdout
@@ -211,7 +208,7 @@ class TestHistoryCommand:
     def test_history_no_entries(self, tmp_path, monkeypatch):
         """Test history command with no entries."""
         # Setup empty preferences
-        config_dir = tmp_path / ".config" / "typysetup"
+        config_dir = tmp_path / ".typysetup"
         config_dir.mkdir(parents=True, exist_ok=True)
         prefs_file = config_dir / "preferences.json"
 
@@ -246,7 +243,7 @@ class TestHistoryCommand:
 
     def test_history_with_long_project_name(self, tmp_path, monkeypatch):
         """Test history truncates long project names."""
-        config_dir = tmp_path / ".config" / "typysetup"
+        config_dir = tmp_path / ".typysetup"
         config_dir.mkdir(parents=True, exist_ok=True)
         prefs_file = config_dir / "preferences.json"
 
@@ -360,7 +357,7 @@ class TestHistoryCommandEdgeCases:
 
     def test_history_with_missing_preferences_file(self, tmp_path, monkeypatch):
         """Test history when preferences file doesn't exist."""
-        config_dir = tmp_path / ".config" / "typysetup"
+        config_dir = tmp_path / ".typysetup"
         config_dir.mkdir(parents=True, exist_ok=True)
 
         monkeypatch.setenv("HOME", str(tmp_path))

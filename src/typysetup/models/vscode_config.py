@@ -1,6 +1,6 @@
 """VSCode configuration models for workspace settings, extensions, and launch configs."""
 
-from typing import TYPE_CHECKING, Any, Dict, List
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -64,34 +64,34 @@ class VSCodeConfiguration(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    settings: Dict[str, Any] = Field(
+    settings: dict[str, Any] = Field(
         default_factory=dict, description="Settings for .vscode/settings.json"
     )
-    extensions: List[str] = Field(
+    extensions: list[str] = Field(
         default_factory=list, description="Extension IDs for .vscode/extensions.json"
     )
-    launch_configurations: List[Dict[str, Any]] = Field(
+    launch_configurations: list[dict[str, Any]] = Field(
         default_factory=list, description="Launch configs for .vscode/launch.json"
     )
 
     @field_validator("extensions")
     @classmethod
-    def validate_extensions(cls, v: List[str]) -> List[str]:
+    def validate_extensions(cls, v: list[str]) -> list[str]:
         """Validate that all extensions have valid format."""
         for ext_id in v:
             if not isinstance(ext_id, str) or "." not in ext_id:
                 raise ValueError(f"Invalid extension ID format: {ext_id}")
         return v
 
-    def get_settings_dict(self) -> Dict[str, Any]:
+    def get_settings_dict(self) -> dict[str, Any]:
         """Get settings formatted for settings.json."""
         return self.settings.copy()
 
-    def get_extensions_dict(self) -> Dict[str, List[str]]:
+    def get_extensions_dict(self) -> dict[str, list[str]]:
         """Get extensions formatted for extensions.json."""
         return {"recommendations": self.extensions}
 
-    def get_launch_dict(self) -> Dict[str, Any]:
+    def get_launch_dict(self) -> dict[str, Any]:
         """Get launch config formatted for launch.json."""
         return {
             "version": "0.2.0",

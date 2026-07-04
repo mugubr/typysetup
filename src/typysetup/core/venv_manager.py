@@ -5,7 +5,6 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optional
 from venv import EnvBuilder
 
 from rich.console import Console
@@ -138,7 +137,7 @@ class VirtualEnvironmentManager:
                 logger.exception(f"Unexpected error during venv creation: {e}")
                 return False
 
-    def discover_python_executable(self, requested_version: str) -> Optional[Path]:
+    def discover_python_executable(self, requested_version: str) -> Path | None:
         """Find suitable Python executable in system PATH.
 
         Search order:
@@ -412,7 +411,7 @@ class VirtualEnvironmentManager:
 
     # Helper methods
 
-    def _get_python_version(self, python_path: Path) -> Optional[str]:
+    def _get_python_version(self, python_path: Path) -> str | None:
         """Get Python version string from executable.
 
         Args:

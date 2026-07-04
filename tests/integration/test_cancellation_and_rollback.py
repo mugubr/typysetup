@@ -70,9 +70,11 @@ class TestCancellationAndRollback:
         def mock_create_fail(*args, **kwargs):
             raise RuntimeError("Venv creation failed")
 
-        with patch("questionary.select", MockSelect), patch(
-            "questionary.confirm", MockConfirm
-        ), patch("venv.EnvBuilder.create", side_effect=mock_create_fail):
+        with (
+            patch("questionary.select", MockSelect),
+            patch("questionary.confirm", MockConfirm),
+            patch("venv.EnvBuilder.create", side_effect=mock_create_fail),
+        ):
             result = cli_runner.invoke(app, ["setup", str(project_path)])
 
             # Should fail
@@ -105,9 +107,11 @@ class TestCancellationAndRollback:
 
             return subprocess.CompletedProcess(args=cmd, returncode=0, stdout=b"", stderr=b"")
 
-        with patch("questionary.select", mock_questionary_auto_confirm["select"]), patch(
-            "questionary.confirm", mock_questionary_auto_confirm["confirm"]
-        ), patch("subprocess.run", side_effect=mock_run_partial_fail):
+        with (
+            patch("questionary.select", mock_questionary_auto_confirm["select"]),
+            patch("questionary.confirm", mock_questionary_auto_confirm["confirm"]),
+            patch("subprocess.run", side_effect=mock_run_partial_fail),
+        ):
             result = cli_runner.invoke(app, ["setup", str(project_path)])
 
             # Should fail
@@ -136,11 +140,13 @@ class TestCancellationAndRollback:
         def mock_generate_fail(*args, **kwargs):
             raise PermissionError("Cannot write VSCode config")
 
-        with patch("questionary.select", mock_questionary_auto_confirm["select"]), patch(
-            "questionary.confirm", mock_questionary_auto_confirm["confirm"]
-        ), patch(
-            "typysetup.core.vscode_config_generator.VSCodeConfigGenerator.generate",
-            side_effect=mock_generate_fail,
+        with (
+            patch("questionary.select", mock_questionary_auto_confirm["select"]),
+            patch("questionary.confirm", mock_questionary_auto_confirm["confirm"]),
+            patch(
+                "typysetup.core.vscode_config_generator.VSCodeConfigGenerator.generate",
+                side_effect=mock_generate_fail,
+            ),
         ):
             result = cli_runner.invoke(app, ["setup", str(project_path)])
 
@@ -175,9 +181,11 @@ class TestCancellationAndRollback:
 
         runner = CliRunner()
 
-        with patch("questionary.select", MockSelect), patch(
-            "questionary.confirm", MockConfirm
-        ), patch("subprocess.run", side_effect=simulate_interrupt):
+        with (
+            patch("questionary.select", MockSelect),
+            patch("questionary.confirm", MockConfirm),
+            patch("subprocess.run", side_effect=simulate_interrupt),
+        ):
             result = runner.invoke(app, ["setup", str(project_path)])
 
             # Should handle KeyboardInterrupt gracefully
@@ -264,9 +272,11 @@ class TestCancellationAndRollback:
         def mock_fail_early(*args, **kwargs):
             raise RuntimeError("Early failure")
 
-        with patch("questionary.select", mock_questionary_auto_confirm["select"]), patch(
-            "questionary.confirm", mock_questionary_auto_confirm["confirm"]
-        ), patch("venv.EnvBuilder.create", side_effect=mock_fail_early):
+        with (
+            patch("questionary.select", mock_questionary_auto_confirm["select"]),
+            patch("questionary.confirm", mock_questionary_auto_confirm["confirm"]),
+            patch("venv.EnvBuilder.create", side_effect=mock_fail_early),
+        ):
             result = cli_runner.invoke(app, ["setup", str(project_path)])
 
             assert result.exit_code == 1
@@ -379,38 +389,124 @@ class TestSetupCancellationScenarios:
         """Test cancellation during VSCode config generation."""
         pass  # Placeholder for future implementation
 
-    def test_cancel_and_restart_setup(self, tmp_path, cli_runner):
+    def test_cancel_and_restart_setup(self, tmp_path, cli_runner, monkeypatch):
         """Test that cancelled setup can be restarted successfully."""
+        # Arrange: isolate preferences under a temporary HOME
+        home_dir = tmp_path / "home"
+        home_dir.mkdir()
+        monkeypatch.setenv("HOME", str(home_dir))
+
         project_path = tmp_path / "test-restart"
         project_path.mkdir()
 
-        # First attempt: cancel
-        class MockConfirmCancel:
-            def ask(self):
-                return False  # Cancel
-
         class MockSelect:
-            def ask(self):
-                return "FastAPI"
+            def __init__(self, message, choices, **kwargs):
+                self.message = message
+                self.choices = choices
 
-        with patch("questionary.select", MockSelect), patch(
-            "questionary.confirm", MockConfirmCancel
+            def ask(self):
+                if "setup type" in self.message.lower():
+                    return "FastAPI"
+                if "package manager" in self.message.lower():
+                    return "uv"
+                return self.choices[0] if self.choices else None
+
+        class MockText:
+            def __init__(self, message, **kwargs):
+                self.message = message
+
+            def ask(self):
+                if "Project name" in self.message:
+                    return "my_project"
+                return ""  # skip optional description/author/email
+
+        class MockCheckbox:
+            def __init__(self, message, choices, **kwargs):
+                self.choices = choices
+
+            def ask(self):
+                return [
+                    choice.get("value", choice) if isinstance(choice, dict) else choice
+                    for choice in self.choices
+                ]
+
+        # First attempt: user declines the setup confirmation prompt
+        class MockConfirmCancel:
+            def __init__(self, message, **kwargs):
+                self.message = message
+
+            def ask(self):
+                return "Proceed with setup?" not in self.message
+
+        with (
+            patch("questionary.select", MockSelect),
+            patch("questionary.confirm", MockConfirmCancel),
+            patch("questionary.text", MockText),
+            patch("questionary.checkbox", MockCheckbox),
         ):
             result1 = cli_runner.invoke(app, ["setup", str(project_path)])
 
-        # Second attempt: proceed
+        # Cancelled run exits non-zero and leaves no venv or saved config behind
+        assert result1.exit_code == 1
+        assert not (project_path / "venv").exists()
+        assert not (project_path / ".typysetup" / "config.json").exists()
+
+        # Second attempt: proceed. Stub venv creation (unit-tested separately);
+        # real EnvBuilder pip bootstrapping is incompatible with mocked subprocess.
+        from typysetup.utils.paths import get_venv_path, get_venv_python_executable
+
+        def fake_create_venv(self, venv_project_path, python_version, project_config):
+            venv_path = get_venv_path(venv_project_path)
+            python_executable = get_venv_python_executable(venv_path)
+            python_executable.parent.mkdir(parents=True, exist_ok=True)
+            python_executable.write_text("")
+            (venv_path / "pyvenv.cfg").write_text("home = /usr\nversion = 3.11.0\n")
+            project_config.venv_path = str(venv_path)
+            project_config.python_executable = str(python_executable)
+            return True
+
+        monkeypatch.setattr(
+            "typysetup.core.venv_manager.VirtualEnvironmentManager.create_virtual_environment",
+            fake_create_venv,
+        )
+
         class MockConfirmProceed:
+            def __init__(self, message, **kwargs):
+                self.message = message
+
             def ask(self):
                 return True
 
         def mock_subprocess_success(cmd, *args, **kwargs):
-            return subprocess.CompletedProcess(args=cmd, returncode=0, stdout=b"", stderr=b"")
+            cmd_list = cmd if isinstance(cmd, (list, tuple)) else [cmd]
+            cmd_str = " ".join(str(c) for c in cmd_list)
+            if "--version" in cmd_str and "pip" in cmd_str:
+                return subprocess.CompletedProcess(
+                    args=cmd,
+                    returncode=0,
+                    stdout="pip 23.3.1 from /venv (python 3.11)\n",
+                    stderr="",
+                )
+            if "--version" in cmd_str:
+                return subprocess.CompletedProcess(
+                    args=cmd, returncode=0, stdout="Python 3.11.0\n", stderr=""
+                )
+            return subprocess.CompletedProcess(
+                args=cmd, returncode=0, stdout="Successfully installed", stderr=""
+            )
 
-        with patch("questionary.select", MockSelect), patch(
-            "questionary.confirm", MockConfirmProceed
-        ), patch("subprocess.run", side_effect=mock_subprocess_success):
+        with (
+            patch("questionary.select", MockSelect),
+            patch("questionary.confirm", MockConfirmProceed),
+            patch("questionary.text", MockText),
+            patch("questionary.checkbox", MockCheckbox),
+            patch("subprocess.run", side_effect=mock_subprocess_success),
+        ):
             result2 = cli_runner.invoke(app, ["setup", str(project_path)])
 
-            # Second attempt should succeed
-            assert result2.exit_code == 0
-            assert (project_path / "venv").exists()
+        # Second attempt should succeed and persist the configuration
+        assert result2.exit_code == 0
+        assert (project_path / "venv").exists()
+        config_data = json.loads((project_path / ".typysetup" / "config.json").read_text())
+        assert config_data["setup_type_slug"] == "fastapi"
+        assert config_data["status"] == "success"

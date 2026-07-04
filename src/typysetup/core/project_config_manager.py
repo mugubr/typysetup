@@ -5,7 +5,6 @@ import logging
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from pydantic import ValidationError
 from rich.console import Console
@@ -41,7 +40,7 @@ class ProjectConfigManager:
     CONFIG_DIR_NAME = ".typysetup"
     CONFIG_FILE_NAME = "config.json"
 
-    def __init__(self, project_path: Optional[Path] = None):
+    def __init__(self, project_path: Path | None = None):
         """Initialize project config manager.
 
         Args:
@@ -49,7 +48,7 @@ class ProjectConfigManager:
                 will be resolved to {project_path}/.typysetup/config.json
         """
         self.project_path = Path(project_path) if project_path else None
-        self._config_path: Optional[Path] = None
+        self._config_path: Path | None = None
         if self.project_path:
             self._config_path = self._get_config_path(self.project_path)
 
@@ -83,7 +82,7 @@ class ProjectConfigManager:
         except Exception as e:
             raise ProjectConfigSaveError(f"Cannot create config directory {config_dir}: {e}") from e
 
-    def load_config(self, project_path: Optional[Path] = None) -> Optional[ProjectConfiguration]:
+    def load_config(self, project_path: Path | None = None) -> ProjectConfiguration | None:
         """Load project configuration from disk.
 
         Args:
@@ -131,9 +130,7 @@ class ProjectConfigManager:
         except Exception as e:
             raise ProjectConfigLoadError(f"Error loading config: {e}") from e
 
-    def save_config(
-        self, config: ProjectConfiguration, project_path: Optional[Path] = None
-    ) -> None:
+    def save_config(self, config: ProjectConfiguration, project_path: Path | None = None) -> None:
         """Save project configuration to disk with atomic write.
 
         Writes to a temporary file first, then renames to ensure atomicity.
@@ -190,12 +187,14 @@ class ProjectConfigManager:
             if temp_path.exists():
                 try:
                     temp_path.unlink()
-                except Exception:
-                    pass
+                except OSError as cleanup_error:
+                    logger.warning(
+                        f"Could not remove temporary config file {temp_path}: {cleanup_error}"
+                    )
             raise ProjectConfigSaveError(f"Error saving config: {e}") from e
 
     def display_config(
-        self, config: Optional[ProjectConfiguration] = None, project_path: Optional[Path] = None
+        self, config: ProjectConfiguration | None = None, project_path: Path | None = None
     ) -> None:
         """Display project configuration in formatted Rich output.
 
@@ -315,7 +314,7 @@ class ProjectConfigManager:
             counts[group] = counts.get(group, 0) + 1
         return counts
 
-    def config_exists(self, project_path: Optional[Path] = None) -> bool:
+    def config_exists(self, project_path: Path | None = None) -> bool:
         """Check if project configuration exists.
 
         Args:

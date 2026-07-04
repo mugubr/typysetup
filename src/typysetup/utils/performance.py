@@ -7,8 +7,9 @@ Provides timing measurements, progress tracking, and performance optimization he
 import functools
 import logging
 import time
+from collections.abc import Callable
 from contextlib import contextmanager
-from typing import Any, Callable, Dict, Optional
+from typing import Any
 
 from rich.console import Console
 from rich.progress import (
@@ -30,7 +31,7 @@ class PerformanceTimer:
     """Track performance metrics for operations."""
 
     def __init__(self):
-        self.metrics: Dict[str, Dict[str, Any]] = {}
+        self.metrics: dict[str, dict[str, Any]] = {}
 
     def record(self, operation: str, duration: float, success: bool = True):
         """
@@ -64,7 +65,7 @@ class PerformanceTimer:
         else:
             metric["failure_count"] += 1
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get summary of all performance metrics."""
         return self.metrics.copy()
 
@@ -130,7 +131,7 @@ def measure_time(operation: str, verbose: bool = False):
         ...     create_venv()
         >>> print(f"Duration: {timing['duration']:.2f}s")
     """
-    timing = {"duration": 0.0, "success": True}
+    timing: dict[str, Any] = {"duration": 0.0, "success": True}
     start_time = time.time()
 
     try:
@@ -152,7 +153,7 @@ def measure_time(operation: str, verbose: bool = False):
             logger.info(f"{status} {operation}: {duration:.2f}s")
 
 
-def timed(operation_name: Optional[str] = None):
+def timed(operation_name: str | None = None):
     """
     Decorator to measure function execution time.
 
@@ -183,7 +184,7 @@ class ProgressManager:
 
     def __init__(self, verbose: bool = False):
         self.verbose = verbose
-        self.progress: Optional[Progress] = None
+        self.progress: Progress | None = None
 
     def create_progress(self) -> Progress:
         """Create a Rich Progress instance."""
@@ -198,7 +199,7 @@ class ProgressManager:
         )
 
     @contextmanager
-    def task(self, description: str, total: Optional[int] = None):
+    def task(self, description: str, total: int | None = None):
         """
         Context manager for a single progress task.
 
@@ -270,7 +271,7 @@ def estimate_time(operation: str, count: int, avg_time_per_item: float) -> float
     metrics = _global_timer.metrics.get(operation)
     if metrics and metrics["count"] > 0:
         # Use historical average if available
-        return metrics["avg_duration"] * count
+        return float(metrics["avg_duration"]) * count
 
     # Use provided estimate
     return count * avg_time_per_item
@@ -309,7 +310,7 @@ def format_duration(seconds: float) -> str:
 # Performance optimization helpers
 
 
-def batch_operations(items: list, batch_size: int = 10, operation: Optional[Callable] = None):
+def batch_operations(items: list, batch_size: int = 10, operation: Callable | None = None):
     """
     Batch operations for better performance.
 

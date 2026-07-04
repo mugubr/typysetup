@@ -2,7 +2,7 @@
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from rich.console import Console
 
@@ -18,7 +18,7 @@ class VSCodeConfigGenerator:
     def __init__(self):
         """Initialize the VSCode config generator."""
         self.backup_manager = FileBackupManager()
-        self.backups: Dict[str, Path] = {}  # Track created backups for rollback
+        self.backups: dict[str, Path] = {}  # Track created backups for rollback
 
     def generate(
         self,
@@ -58,6 +58,12 @@ class VSCodeConfigGenerator:
             if project_config.selected_extensions:
                 setup_config.extensions.extend(project_config.selected_extensions)
 
+            # Point VSCode at the project's virtual environment interpreter so the
+            # editor auto-selects the venv without manual configuration.
+            interpreter_path = self._get_interpreter_path(project_config, project_path)
+            if interpreter_path:
+                setup_config.settings["python.defaultInterpreterPath"] = interpreter_path
+
             # Backup existing files
             self._backup_existing_configs(vscode_dir)
 
@@ -84,7 +90,27 @@ class VSCodeConfigGenerator:
             self._restore_from_backups(vscode_dir)
             raise
 
-    def _load_existing_settings(self, vscode_dir: Path) -> Optional[Dict[str, Any]]:
+    def _get_interpreter_path(
+        self, project_config: ProjectConfiguration, project_path: Path
+    ) -> str | None:
+        """Compute a ``${workspaceFolder}``-relative path to the venv interpreter.
+
+        The venv location is deterministic relative to the project, and VSCode
+        config is generated before the venv is created, so the path is derived
+        from ``project_path`` rather than the not-yet-populated executable field.
+        Keeps the setting portable across machines.
+        """
+        from typysetup.utils.paths import get_venv_path, get_venv_python_executable
+
+        venv_python = get_venv_python_executable(get_venv_path(project_path))
+        try:
+            relative = Path(venv_python).relative_to(Path(project_path))
+            return "${workspaceFolder}/" + relative.as_posix()
+        except ValueError:
+            # Interpreter lives outside the project; fall back to a known path.
+            return project_config.python_executable or str(venv_python)
+
+    def _load_existing_settings(self, vscode_dir: Path) -> dict[str, Any] | None:
         """Load existing .vscode/settings.json if it exists.
 
         Args:
@@ -100,12 +126,13 @@ class VSCodeConfigGenerator:
 
         try:
             with open(settings_path, encoding="utf-8") as f:
-                return json.load(f)
+                settings: dict[str, Any] = json.load(f)
+                return settings
         except (OSError, json.JSONDecodeError) as e:
             console.print(f"[yellow]Warning: Could not read existing settings.json: {e}[/yellow]")
             return None
 
-    def _load_existing_extensions(self, vscode_dir: Path) -> Optional[List[str]]:
+    def _load_existing_extensions(self, vscode_dir: Path) -> list[str] | None:
         """Load existing .vscode/extensions.json if it exists.
 
         Args:
@@ -122,12 +149,13 @@ class VSCodeConfigGenerator:
         try:
             with open(extensions_path, encoding="utf-8") as f:
                 data = json.load(f)
-                return data.get("recommendations", [])
+                recommendations: list[str] = data.get("recommendations", [])
+                return recommendations
         except (OSError, json.JSONDecodeError) as e:
             console.print(f"[yellow]Warning: Could not read existing extensions.json: {e}[/yellow]")
             return None
 
-    def _load_existing_launch_config(self, vscode_dir: Path) -> Optional[Dict[str, Any]]:
+    def _load_existing_launch_config(self, vscode_dir: Path) -> dict[str, Any] | None:
         """Load existing .vscode/launch.json if it exists.
 
         Args:
@@ -143,7 +171,8 @@ class VSCodeConfigGenerator:
 
         try:
             with open(launch_path, encoding="utf-8") as f:
-                return json.load(f)
+                launch_config: dict[str, Any] = json.load(f)
+                return launch_config
         except (OSError, json.JSONDecodeError) as e:
             console.print(f"[yellow]Warning: Could not read existing launch.json: {e}[/yellow]")
             return None
@@ -168,7 +197,7 @@ class VSCodeConfigGenerator:
                 except OSError as e:
                     console.print(f"[yellow]Warning: Could not backup {filename}: {e}[/yellow]")
 
-    def _merge_settings(self, existing: Dict[str, Any], new: Dict[str, Any]) -> Dict[str, Any]:
+    def _merge_settings(self, existing: dict[str, Any], new: dict[str, Any]) -> dict[str, Any]:
         """Merge settings with new taking precedence.
 
         Args:
@@ -182,7 +211,7 @@ class VSCodeConfigGenerator:
 
         return DeepMergeStrategy.deep_merge_dicts(existing, new)
 
-    def _merge_extensions(self, existing: List[str], new: List[str]) -> List[str]:
+    def _merge_extensions(self, existing: list[str], new: list[str]) -> list[str]:
         """Merge extension lists with deduplication.
 
         Args:
@@ -197,8 +226,8 @@ class VSCodeConfigGenerator:
         return DeepMergeStrategy.deduplicate_extensions(existing, new)
 
     def _merge_launch_configs(
-        self, existing: Dict[str, Any], new: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, existing: dict[str, Any], new: dict[str, Any]
+    ) -> dict[str, Any]:
         """Merge launch configurations.
 
         Args:
@@ -222,7 +251,7 @@ class VSCodeConfigGenerator:
             "configurations": merged_configs,
         }
 
-    def _write_settings_json(self, vscode_dir: Path, settings: Dict[str, Any]) -> None:
+    def _write_settings_json(self, vscode_dir: Path, settings: dict[str, Any]) -> None:
         """Write settings.json file with proper formatting.
 
         Args:
@@ -241,7 +270,7 @@ class VSCodeConfigGenerator:
         except OSError as e:
             raise OSError(f"Failed to write settings.json: {e}") from e
 
-    def _write_extensions_json(self, vscode_dir: Path, extensions: List[str]) -> None:
+    def _write_extensions_json(self, vscode_dir: Path, extensions: list[str]) -> None:
         """Write extensions.json file with proper formatting.
 
         Args:
@@ -261,7 +290,7 @@ class VSCodeConfigGenerator:
         except OSError as e:
             raise OSError(f"Failed to write extensions.json: {e}") from e
 
-    def _write_launch_json(self, vscode_dir: Path, launch_config: Dict[str, Any]) -> None:
+    def _write_launch_json(self, vscode_dir: Path, launch_config: dict[str, Any]) -> None:
         """Write launch.json file with proper formatting.
 
         Args:

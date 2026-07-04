@@ -3,7 +3,6 @@
 import shutil
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import List, Optional
 
 
 class FileBackupManager:
@@ -16,7 +15,7 @@ class FileBackupManager:
         pass
 
     @staticmethod
-    def create_backup(filepath: Path) -> Optional[Path]:
+    def create_backup(filepath: Path) -> Path | None:
         """Create a timestamped backup of a file.
 
         Args:
@@ -71,7 +70,7 @@ class FileBackupManager:
             raise OSError(f"Failed to restore backup {backup_path} to {filepath}: {e}") from e
 
     @staticmethod
-    def list_backups(filepath: Path) -> List[Path]:
+    def list_backups(filepath: Path) -> list[Path]:
         """List all backups for a file, sorted by timestamp (newest first).
 
         Args:

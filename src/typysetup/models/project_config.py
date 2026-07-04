@@ -1,9 +1,11 @@
 """ProjectConfiguration data model for setup result tracking."""
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
+
+from typysetup.utils.datetime_utils import utc_now
 
 
 class InstalledDependency(BaseModel):
@@ -14,7 +16,7 @@ class InstalledDependency(BaseModel):
     name: str = Field(..., description="Package name")
     version: str = Field(..., description="Installed version")
     installed_by: str = Field(..., description="Package manager that installed it")
-    from_group: Optional[str] = Field(
+    from_group: str | None = Field(
         default=None, description="Dependency group (core, dev, optional)"
     )
 
@@ -30,27 +32,25 @@ class ProjectConfiguration(BaseModel):
     python_executable: str = Field(..., description="Path to Python interpreter in venv")
     package_manager: str = Field(..., description="Chosen package manager (uv, pip, poetry)")
     venv_path: str = Field(..., description="Path to virtual environment")
-    installed_dependencies: List[InstalledDependency] = Field(
+    installed_dependencies: list[InstalledDependency] = Field(
         default_factory=list, description="List of installed packages"
     )
-    vscode_settings_merged: Optional[Dict[str, Any]] = Field(
+    vscode_settings_merged: dict[str, Any] | None = Field(
         default=None, description="Final merged VSCode settings"
     )
-    vscode_extensions_recommended: Optional[List[str]] = Field(
+    vscode_extensions_recommended: list[str] | None = Field(
         default=None, description="Extensions recommended for this setup"
     )
-    dependency_selections: Optional[Dict[str, Any]] = Field(
+    dependency_selections: dict[str, Any] | None = Field(
         default=None, description="User's dependency group selections (Phase 4)"
     )
-    selected_extensions: Optional[List[str]] = Field(
+    selected_extensions: list[str] | None = Field(
         default=None, description="VSCode extensions selected by user (Phase 4)"
     )
-    project_metadata: Optional[Dict[str, Any]] = Field(
+    project_metadata: dict[str, Any] | None = Field(
         default=None, description="Project metadata (name, description, author) (Phase 4)"
     )
-    created_at: datetime = Field(
-        default_factory=datetime.utcnow, description="Setup completion timestamp"
-    )
+    created_at: datetime = Field(default_factory=utc_now, description="Setup completion timestamp")
     status: str = Field(
         default="pending",
         description="Setup status (pending, running, success, partial, failed)",
@@ -80,7 +80,7 @@ class ProjectConfiguration(BaseModel):
         return v
 
     def add_dependency(
-        self, name: str, version: str, manager: str, group: Optional[str] = None
+        self, name: str, version: str, manager: str, group: str | None = None
     ) -> None:
         """Add an installed dependency."""
         self.installed_dependencies.append(

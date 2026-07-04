@@ -1,7 +1,7 @@
 """Integration tests for orchestrator workflow and dependency selection features."""
 
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -22,6 +22,47 @@ def orchestrator(config_loader):
     return SetupOrchestrator(config_loader=config_loader)
 
 
+def install_happy_path_phase_mocks(orchestrator, setup_type):
+    """Replace orchestrator phases and managers with happy-path mocks.
+
+    Returns:
+        Tuple of (selection, scaffold, environment) phase mocks so tests can
+        override individual steps to simulate cancellation or failure.
+    """
+    selection = MagicMock()
+    selection.select_setup_type.return_value = setup_type
+    selection.select_python_version.return_value = "3.11"
+    selection.select_package_manager.return_value = "pip"
+    selection.confirm_setup.return_value = True
+    selection.select_dependency_groups.return_value = DependencySelection(
+        setup_type_slug=setup_type.slug,
+        selected_groups={"core": True},
+        all_packages=["fastapi>=0.104"],
+    )
+    selection.select_vscode_extensions.return_value = ["ms-python.python"]
+    selection.collect_project_metadata.return_value = ProjectMetadata(project_name="test_project")
+    selection.confirm_all_selections.return_value = True
+    selection.prompt_continue.return_value = True
+    orchestrator.selection_phase = selection
+
+    scaffold = MagicMock()
+    scaffold.generate_gitignore.return_value = True
+    scaffold.generate_vscode_config.return_value = True
+    scaffold.generate_pyproject_toml.return_value = True
+    orchestrator.scaffold_phase = scaffold
+
+    environment = MagicMock()
+    environment.create_virtual_environment.return_value = True
+    environment.install_dependencies.return_value = True
+    orchestrator.environment_phase = environment
+
+    orchestrator.summary_phase = MagicMock()
+    orchestrator.preference_manager = MagicMock()
+    orchestrator.project_config_manager = MagicMock()
+
+    return selection, scaffold, environment
+
+
 class TestPhase4Orchestrator:
     """Tests for Phase 4 features in SetupOrchestrator."""
 
@@ -35,57 +76,23 @@ class TestPhase4Orchestrator:
         assert orchestrator.selected_extensions is None
         assert orchestrator.project_metadata is None
 
-    @patch("typysetup.commands.setup_orchestrator.ensure_project_directory")
-    @patch.object(SetupOrchestrator, "_select_setup_type", return_value=True)
-    @patch.object(SetupOrchestrator, "_select_python_version", return_value="3.10")
-    @patch.object(SetupOrchestrator, "_select_package_manager", return_value="pip")
-    @patch.object(SetupOrchestrator, "_confirm_setup", return_value=True)
-    @patch.object(SetupOrchestrator, "_select_dependency_groups")
-    @patch.object(SetupOrchestrator, "_select_vscode_extensions")
-    @patch.object(SetupOrchestrator, "_collect_project_metadata")
-    @patch.object(SetupOrchestrator, "_confirm_all_selections", return_value=True)
-    @patch.object(SetupOrchestrator, "_generate_vscode_config", return_value=True)
-    @patch.object(SetupOrchestrator, "_create_virtual_environment", return_value=True)
-    @patch.object(SetupOrchestrator, "_generate_pyproject_toml", return_value=True)
-    @patch.object(SetupOrchestrator, "_install_dependencies", return_value=True)
-    def test_run_setup_wizard_calls_all_phase4_methods(
-        self,
-        mock_install_deps,
-        mock_pyproject,
-        mock_create_venv,
-        mock_vscode_config,
-        mock_confirm_all,
-        mock_metadata,
-        mock_extensions,
-        mock_deps,
-        mock_confirm,
-        mock_manager,
-        mock_version,
-        mock_type,
-        mock_ensure,
-        orchestrator,
-    ):
+    def test_run_setup_wizard_calls_all_phase4_methods(self, orchestrator, tmp_path):
         """Test that run_setup_wizard calls all Phase 4 methods."""
-        # Setup
-        mock_ensure.return_value = Path("/tmp/test")
-        mock_deps.return_value = DependencySelection(
-            setup_type_slug="fastapi",
-            selected_groups={"core": True},
-            all_packages=["fastapi>=0.104"],
-        )
-        mock_extensions.return_value = ["ms-python.python"]
-        mock_metadata.return_value = ProjectMetadata(project_name="test_project")
-        orchestrator.setup_type = orchestrator.config_loader.load_setup_type("fastapi")
+        # Arrange
+        setup_type = orchestrator.config_loader.load_setup_type("fastapi")
+        selection, _, _ = install_happy_path_phase_mocks(orchestrator, setup_type)
 
-        # Execute
-        result = orchestrator.run_setup_wizard("/tmp/test")
+        # Act
+        result = orchestrator.run_setup_wizard(str(tmp_path))
 
-        # Verify all methods called
-        mock_deps.assert_called_once()
-        mock_extensions.assert_called_once()
-        mock_metadata.assert_called_once()
-        mock_confirm_all.assert_called_once()
+        # Assert: every Phase 4 selection step ran and the wizard completed
+        selection.select_dependency_groups.assert_called_once()
+        selection.select_vscode_extensions.assert_called_once()
+        selection.collect_project_metadata.assert_called_once()
+        selection.confirm_all_selections.assert_called_once()
         assert result is not None
+        assert result.setup_type_slug == "fastapi"
+        orchestrator.project_config_manager.save_config.assert_called_once()
 
     @patch("typysetup.commands.setup_orchestrator.ensure_project_directory")
     @patch.object(SetupOrchestrator, "_select_setup_type", return_value=True)
@@ -111,41 +118,21 @@ class TestPhase4Orchestrator:
 
         assert result is None
 
-    @patch("typysetup.commands.setup_orchestrator.ensure_project_directory")
-    @patch.object(SetupOrchestrator, "_select_setup_type", return_value=True)
-    @patch.object(SetupOrchestrator, "_select_python_version", return_value="3.10")
-    @patch.object(SetupOrchestrator, "_select_package_manager", return_value="pip")
-    @patch.object(SetupOrchestrator, "_confirm_setup", return_value=True)
-    @patch.object(SetupOrchestrator, "_select_dependency_groups")
-    @patch.object(SetupOrchestrator, "_select_vscode_extensions", return_value=None)
-    @patch.object(SetupOrchestrator, "_collect_project_metadata")
-    def test_run_setup_wizard_handles_extension_selection_cancel(
-        self,
-        mock_metadata,
-        mock_extensions,
-        mock_deps,
-        mock_confirm,
-        mock_manager,
-        mock_version,
-        mock_type,
-        mock_ensure,
-        orchestrator,
-    ):
+    def test_run_setup_wizard_handles_extension_selection_cancel(self, orchestrator, tmp_path):
         """Test that wizard continues if extension selection returns None (empty list)."""
-        mock_ensure.return_value = Path("/tmp/test")
-        mock_deps.return_value = DependencySelection(
-            setup_type_slug="fastapi",
-            selected_groups={"core": True},
-            all_packages=["fastapi>=0.104"],
-        )
-        mock_extensions.return_value = None
-        mock_metadata.return_value = ProjectMetadata(project_name="test_project")
-        orchestrator.setup_type = orchestrator.config_loader.load_setup_type("fastapi")
+        # Arrange
+        setup_type = orchestrator.config_loader.load_setup_type("fastapi")
+        selection, _, _ = install_happy_path_phase_mocks(orchestrator, setup_type)
+        selection.select_vscode_extensions.return_value = None
 
-        result = orchestrator.run_setup_wizard("/tmp/test")
+        # Act
+        result = orchestrator.run_setup_wizard(str(tmp_path))
 
-        # Extensions are optional, so wizard should continue
+        # Assert: extensions are optional — wizard normalizes to [] and continues
         assert orchestrator.selected_extensions == []
+        assert result is not None
+        assert result.selected_extensions == []
+        selection.collect_project_metadata.assert_called_once()
 
     @patch("typysetup.commands.setup_orchestrator.ensure_project_directory")
     @patch.object(SetupOrchestrator, "_select_setup_type", return_value=True)

@@ -2,7 +2,7 @@
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 import yaml
 from pydantic import ValidationError
@@ -24,7 +24,7 @@ class ConfigLoadError(Exception):
 class ConfigLoader:
     """Load and validate setup type YAML configurations."""
 
-    def __init__(self, config_dir: Optional[Path] = None):
+    def __init__(self, config_dir: Path | None = None):
         """
         Initialize ConfigLoader.
 
@@ -39,8 +39,8 @@ class ConfigLoader:
             raise ConfigLoadError(f"Config directory does not exist: {config_dir}")
 
         self.config_dir = config_dir
-        self._cache: Dict[str, SetupType] = {}
-        self._registry: Optional[SetupTypeRegistry] = None
+        self._cache: dict[str, SetupType] = {}
+        self._registry: SetupTypeRegistry | None = None
 
     def load_setup_type(self, slug: str) -> SetupType:
         """
@@ -83,7 +83,7 @@ class ConfigLoader:
         except Exception as e:
             raise ConfigLoadError(f"Error loading setup type {slug}: {e}") from e
 
-    def load_all_setup_types(self) -> List[SetupType]:
+    def load_all_setup_types(self) -> list[SetupType]:
         """
         Load all available setup type configurations.
 
@@ -115,7 +115,7 @@ class ConfigLoader:
         logger.info(f"Loaded {len(setup_types)} setup types")
         return setup_types
 
-    def get_setup_type_by_slug(self, slug: str) -> Optional[SetupType]:
+    def get_setup_type_by_slug(self, slug: str) -> SetupType | None:
         """
         Get setup type by slug, returning None if not found.
 
@@ -130,7 +130,7 @@ class ConfigLoader:
         except ConfigLoadError:
             return None
 
-    def list_setup_type_slugs(self) -> List[str]:
+    def list_setup_type_slugs(self) -> list[str]:
         """
         Get list of all available setup type slugs.
 
@@ -162,7 +162,7 @@ class ConfigLoader:
 
         return self._registry
 
-    def validate_all_configs(self) -> List[str]:
+    def validate_all_configs(self) -> list[str]:
         """Validate all loaded configuration files.
 
         Returns:
@@ -181,7 +181,7 @@ class ConfigLoader:
 
         return errors
 
-    def get_setup_type_stats(self) -> Dict[str, any]:
+    def get_setup_type_stats(self) -> dict[str, Any]:
         """Get statistics about all setup types.
 
         Returns:
@@ -190,7 +190,7 @@ class ConfigLoader:
         registry = self.get_registry()
         return registry.get_stats()
 
-    def search_setup_types(self, query: str) -> List[SetupType]:
+    def search_setup_types(self, query: str) -> list[SetupType]:
         """Search setup types by name, slug, or description.
 
         Args:
