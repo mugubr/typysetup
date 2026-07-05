@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "typysetup"
-version = "2.1.0"
+version = "2.2.0"
 description = "Interactive Python environment setup CLI for VSCode"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -22,6 +22,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Software Development :: Libraries :: Application Frameworks",
 ]
 
@@ -41,14 +42,12 @@ Documentation = "https://github.com/mugubr/typysetup/blob/master/README.md"
 Repository = "https://github.com/mugubr/typysetup"
 Issues = "https://github.com/mugubr/typysetup/issues"
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
-    "pytest>=8.3",
-    "pytest-cov>=6.0",
-    "pytest-watch>=4.2.0",
-    "black>=24.10",
-    "ruff>=0.8.0",
-    "mypy>=1.13",
+    "pytest>=9.0",
+    "pytest-cov>=7.0",
+    "ruff>=0.15",
+    "mypy>=2.0",
 ]
 release = [
     "build>=1.2",
@@ -72,7 +71,7 @@ testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "--cov=typysetup --cov-report=html --cov-report=term-missing"
+addopts = "--cov=typysetup --cov-report=html --cov-report=term-missing --cov-fail-under=80"
 markers = [
     "unit: Unit tests",
     "integration: Integration tests",
@@ -88,25 +87,6 @@ source = ["src/typysetup", "*/site-packages/typysetup"]
 
 [tool.coverage.report]
 show_missing = true
-
-[tool.black]
-line-length = 100
-target-version = ["py311", "py312", "py313"]
-include = '\.pyi?$'
-exclude = '''
-/(
-    \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | _build
-  | buck-out
-  | build
-  | dist
-  | venv
-)/
-'''
 
 [tool.ruff]
 line-length = 100
@@ -134,7 +114,7 @@ ignore = [
 python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
-disallow_untyped_defs = false
+disallow_untyped_defs = true
 disallow_incomplete_defs = false
 check_untyped_defs = true
 ignore_missing_imports = true

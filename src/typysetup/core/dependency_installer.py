@@ -27,7 +27,7 @@ class DependencyInstaller:
     - Error handling and reporting
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the dependency installer."""
         self.timeout_pip = 600  # 10 minutes for pip
         self.timeout_uv = 600  # 10 minutes for uv

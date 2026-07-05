@@ -15,7 +15,7 @@ class ConfigCommand:
     for a given project directory.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the config command handler."""
         self.console = Console()
 

@@ -25,8 +25,8 @@ The workflow already declares the matching `environment:` blocks and
 
 ## Cutting a release
 
-1. Make sure `master` is green (the **CI** workflow runs ruff, black, mypy, and
-   pytest on Python 3.11–3.13).
+1. Make sure `master` is green (the **CI** workflow runs ruff (lint + format),
+   mypy, and pytest across the supported Python matrix).
 2. Bump the version in **both** places (they must stay in sync):
    - `src/typysetup/__init__.py` → `__version__`
    - `pyproject.toml` → `version`
@@ -35,12 +35,12 @@ The workflow already declares the matching `environment:` blocks and
 5. Verify locally:
 
    ```bash
-   uv sync --extra dev
+   uv sync --group dev
    uv run ruff check src tests
-   uv run black --check src tests
+   uv run ruff format --check src tests
    uv run pytest
-   uv run --extra release python -m build
-   uv run --extra release twine check dist/*
+   uv run --group release python -m build
+   uv run --group release twine check dist/*
    ```
 
 6. Commit, then tag and push the tag:

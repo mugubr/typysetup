@@ -175,6 +175,10 @@ class ProjectConfigManager:
                 json.dump(data, f, indent=2, ensure_ascii=False)
                 f.flush()  # Ensure data is written
 
+            # Restrict permissions before publishing: the file holds author
+            # metadata and filesystem paths (no-op on Windows)
+            temp_path.chmod(0o600)
+
             # Atomic rename (overwrites existing file)
             temp_path.replace(config_path)
             logger.info(f"Saved project config to {config_path}")

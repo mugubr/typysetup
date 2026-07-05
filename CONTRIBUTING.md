@@ -245,11 +245,8 @@ def merge_vscode_settings(
 Usamos as seguintes ferramentas:
 
 ```bash
-# Formatar código
-black src/ tests/
-
-# Ordenar imports
-isort src/ tests/
+# Formatar código (inclui ordenação de imports)
+ruff format src/ tests/
 
 # Lint
 ruff check src/ tests/
@@ -260,14 +257,6 @@ mypy src/typysetup
 
 **Configuração no pyproject.toml**:
 ```toml
-[tool.black]
-line-length = 100
-target-version = ['py311', 'py312', 'py313']
-
-[tool.isort]
-profile = "black"
-line_length = 100
-
 [tool.ruff]
 line-length = 100
 select = ["E", "F", "W", "I"]
@@ -303,7 +292,7 @@ git checkout -b fix/nome-do-bug
 pytest
 
 # Verificar formatação
-black src/ tests/
+ruff format --check src/ tests/
 ruff check src/ tests/
 mypy src/typysetup
 
@@ -518,7 +507,7 @@ pytest tests/integration/test_setup_types.py
 
 ### Checklist Antes de Criar PR
 
-- [ ] Código segue padrões de estilo (black, ruff)
+- [ ] Código segue padrões de estilo (ruff format + ruff check)
 - [ ] Testes adicionados/atualizados
 - [ ] Todos os testes passam (`pytest`)
 - [ ] Cobertura mantida/melhorada

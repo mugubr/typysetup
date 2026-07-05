@@ -115,7 +115,7 @@ class ProjectMetadata(BaseModel):
 
         if not re.match(email_pattern, v):
             raise ValueError(
-                f"'{v}' is not a valid email address. " "Expected format: user@example.com"
+                f"'{v}' is not a valid email address. Expected format: user@example.com"
             )
 
         return v

@@ -5,6 +5,33 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [2.2.0] - 2026-07-04
+
+### Added
+- Suporte a **Python 3.14** (matriz de CI, classifiers e gate de publicação).
+- **CI no Windows** (`windows-latest` nos extremos da matriz, 3.11 e 3.14).
+- Gate de cobertura no pytest: mínimo de **80%** (`--cov-fail-under=80`).
+
+### Changed
+- **Templates modernizados**: settings de VSCode migrados dos deprecados `python.linting.*`/`python.formatting.provider` (sem efeito desde 2023) para o padrão atual com ruff como formatter (`[python] editor.defaultFormatter: charliermarsh.ruff`); launch configs migrados de `type: python` para `type: debugpy`; extensão `ms-python.black-formatter` removida.
+- **Pisos de Python dos templates elevados para 3.10+** (3.8/3.9 atingiram fim de vida) e dependências dos templates atualizadas (Django>=5.2, fastapi>=0.115, numpy>=2.0, pandas>=2.2, tensorflow>=2.18, torch>=2.5, ...). Grupos dev dos templates agora usam pytest + ruff + mypy (sem black).
+- **black substituído por `ruff format`** no desenvolvimento do próprio typysetup (uma ferramenta a menos); CI, docs e CONTRIBUTING atualizados.
+- Dev-deps migradas de `[project.optional-dependencies]` para **`[dependency-groups]` (PEP 735)** — extras `dev`/`release` deixam de ser instaláveis do pacote publicado (`uv sync --group dev`).
+- `SetupTypeRegistry`, comandos e utilitários agora 100% anotados: `disallow_untyped_defs = true` no mypy.
+
+### Fixed
+- **Template async-realtime não instala mais o pacote PyPI `asyncio`** (artefato antigo que sombreava a stdlib e podia quebrar o runtime do projeto gerado).
+- Template ml-ai: nomes de pacote inválidos `jupyter-notebook`/`jupyter-lab` corrigidos para `notebook`/`jupyterlab`.
+- Template django: piso declarado (3.8+) era incompatível com o Django instalado (5.x exige 3.10+).
+- Driver PostgreSQL do template django atualizado de `psycopg2-binary` para `psycopg[binary]` (psycopg 3).
+
+### Security
+- `~/.typysetup/preferences.json` e `.typysetup/config.json` agora são gravados com permissão `0600` (contêm nome/e-mail do autor e paths do sistema).
+
+### Removed
+- `utils/performance.py` (código morto — nunca importado, 0% de cobertura).
+- `pytest-watch` das dev-deps (sem manutenção upstream).
+
 ## [2.1.0] - 2026-07-03
 
 ### ⚠️ Breaking Changes

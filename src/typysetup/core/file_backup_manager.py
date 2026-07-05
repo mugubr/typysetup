@@ -10,7 +10,7 @@ class FileBackupManager:
 
     BACKUP_SUFFIX = ".backup"
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize backup manager."""
         pass
 

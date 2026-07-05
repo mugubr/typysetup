@@ -10,7 +10,7 @@ class HelpCommand:
     preferences, and general usage.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the help command handler."""
         self.console = Console()
 

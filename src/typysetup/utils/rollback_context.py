@@ -2,6 +2,7 @@
 
 import logging
 from collections.abc import Callable
+from types import TracebackType
 from typing import TYPE_CHECKING
 
 from rich.console import Console
@@ -44,7 +45,12 @@ class RollbackContext:
         """
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> "Literal[False]":
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> "Literal[False]":
         """Exit context manager and execute cleanup if exception occurred.
 
         Args:

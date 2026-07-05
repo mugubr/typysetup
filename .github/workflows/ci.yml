@@ -14,12 +14,19 @@ concurrency:
 
 jobs:
   test:
-    name: Test (Python ${{ matrix.python-version }})
-    runs-on: ubuntu-latest
+    name: Test (Python ${{ matrix.python-version }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12", "3.13"]
+        os: [ubuntu-latest]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+        include:
+          # Windows: only the matrix extremes to keep CI minutes in check
+          - os: windows-latest
+            python-version: "3.11"
+          - os: windows-latest
+            python-version: "3.14"
 
     steps:
       - name: Checkout code
@@ -34,13 +41,13 @@ jobs:
         run: uv python install ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: uv sync --extra dev --python ${{ matrix.python-version }}
+        run: uv sync --group dev --python ${{ matrix.python-version }}
 
       - name: Lint (ruff)
         run: uv run ruff check src tests
 
-      - name: Format check (black)
-        run: uv run black --check src tests
+      - name: Format check (ruff format)
+        run: uv run ruff format --check src tests
 
       - name: Type check (mypy)
         run: uv run mypy src

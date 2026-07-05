@@ -5,6 +5,7 @@ from rich.console import Console
 from rich.table import Table
 
 from typysetup.core import PreferenceManager
+from typysetup.models import SetupHistoryEntry, UserPreference
 
 
 class HistoryCommand:
@@ -50,7 +51,7 @@ class HistoryCommand:
             "[dim]Complete a setup with 'typysetup setup <path>' to see history.[/dim]"
         )
 
-    def _display_history(self, prefs, limit: int, verbose: bool) -> None:
+    def _display_history(self, prefs: UserPreference, limit: int, verbose: bool) -> None:
         """Display the setup history table.
 
         Args:
@@ -108,7 +109,7 @@ class HistoryCommand:
             sliced = history
         return list(reversed(sliced))
 
-    def _format_history_row(self, entry, verbose: bool) -> list:
+    def _format_history_row(self, entry: SetupHistoryEntry, verbose: bool) -> list[str]:
         """Format a history entry as a table row.
 
         Args:

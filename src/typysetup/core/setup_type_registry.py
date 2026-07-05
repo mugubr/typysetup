@@ -1,6 +1,7 @@
 """SetupTypeRegistry for managing and querying setup types."""
 
 import logging
+from collections.abc import Iterator
 from typing import Any
 
 from typysetup.core.config_loader import ConfigLoader
@@ -270,7 +271,7 @@ class SetupTypeRegistry:
             raise KeyError(f"Setup type not found: {slug}")
         return st
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[SetupType]:
         """Iterate over all setup types."""
         self._ensure_loaded()
         return iter(self._setup_types.values())

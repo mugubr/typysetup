@@ -15,7 +15,7 @@ console = Console()
 class VSCodeConfigGenerator:
     """Generates and manages VSCode workspace configuration files."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the VSCode config generator."""
         self.backup_manager = FileBackupManager()
         self.backups: dict[str, Path] = {}  # Track created backups for rollback

@@ -89,7 +89,8 @@ class TestVSCodeConfigIntegration:
             # Verify settings include setup type values
             settings_file = project_path / ".vscode" / "settings.json"
             settings = json.loads(settings_file.read_text())
-            assert "python.linting.enabled" in settings
+            assert settings["editor.formatOnSave"] is True
+            assert settings["[python]"]["editor.defaultFormatter"] == "charliermarsh.ruff"
 
     def test_vscode_config_includes_selected_extensions(self, orchestrator, config_loader):
         """Test that VSCode config includes selected extensions."""
@@ -158,7 +159,8 @@ class TestVSCodeConfigIntegration:
             settings = json.loads((vscode_dir / "settings.json").read_text())
             assert settings["editor.wordWrap"] == "on"  # Existing preserved (not in setup)
             assert settings["editor.formatOnSave"] is True  # New from setup (takes precedence)
-            assert settings["python.linting.enabled"] is True  # New from setup
+            # New from setup: ruff é o formatter padrão de Python
+            assert settings["[python]"]["editor.defaultFormatter"] == "charliermarsh.ruff"
 
     def test_vscode_config_creates_backup(self, orchestrator, config_loader):
         """Test that existing config files are backed up."""

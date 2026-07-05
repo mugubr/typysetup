@@ -21,7 +21,7 @@ class PyprojectGenerator:
     - Restoration on failure
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the generator with backup manager."""
         self.file_backup_manager = FileBackupManager()
 
